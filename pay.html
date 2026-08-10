@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pay an invoice — NSQR AI</title>
 <meta name="description" content="Payment options for NSQR AI infrastructure design engagements.">
-<meta name="robots" content="noindex">
 <style>
 :root{
   --bg:#04050c;--bg-2:#070915;--panel:#0a0e1c;
@@ -119,15 +118,22 @@ footer a:hover{color:var(--cyan)}
         <a class="btn disabled" href="#">Details on invoice</a>
       </div>
 
-      <div class="method">
+      <div class="method primary">
         <div>
-          <span class="tag alt">Convenient</span>
-          <h2>Card or online payment</h2>
-          <p>Pay by credit card, debit card, or digital wallet through a secure hosted
-             checkout. Best for smaller invoices and deposits where speed matters more
-             than fees.</p>
+          <span class="tag pref">Fastest</span>
+          <h2>Pay online — any amount</h2>
+          <p>Card, bank debit (ACH) or digital wallet through Stripe's secure checkout.
+             You choose the amount, so it works for a deposit, a milestone, a full
+             invoice, or credit on account. Add your invoice number at checkout and it
+             gets matched automatically.</p>
+          <dl>
+            <dt>ACCEPTS</dt><dd>Card · ACH bank debit · Apple&nbsp;Pay · Google&nbsp;Pay</dd>
+            <dt>AMOUNT</dt><dd>You choose at checkout</dd>
+            <dt>RECEIPT</dt><dd>Emailed automatically</dd>
+          </dl>
         </div>
-        <a class="btn disabled" id="pay-link" href="#">Link coming</a>
+        <a class="btn" id="pay-link"
+           href="https://buy.stripe.com/test_6oU4gA2MW3by0sv45o93y00">Pay now →</a>
       </div>
 
       <div class="method">
@@ -143,11 +149,11 @@ footer a:hover{color:var(--cyan)}
     </div>
 
     <div class="todo">
-      <b>▲ NOT LIVE YET — needs your input</b>
-      <span>Three things before this page can be published: (1) bank details for the ACH
-      block, (2) a hosted payment link once a processor account exists, (3) confirm
-      <code>billing@nsqrai.com</code> is receiving mail. The page is currently
-      <code>noindex</code> and unlinked so nobody can reach it by accident.</span>
+      <b>▲ STRIPE TEST MODE</b>
+      <span>Checkout is wired to a Stripe <strong>test</strong> key, so no real money
+      moves yet — use card <code>4242 4242 4242 4242</code>, any future expiry, any CVC.
+      Two things to finish before real invoices: activate the Stripe account and swap in
+      the live key, and add the bank details to the transfer block above.</span>
     </div>
 
     <div class="note">

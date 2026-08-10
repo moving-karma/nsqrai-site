@@ -1,26 +1,26 @@
 /**
- * nsqrai.com — lead capture + lightweight CRM.
+ * nsqrai.com - lead capture + lightweight CRM.
  *
  * Receives contact-form submissions, appends them to a Google Sheet set up as a
  * simple pipeline tracker, and emails info@nsqrai.com. Runs entirely inside your
  * own Google Workspace: no API keys, no OAuth, no third-party service.
  *
  * SETUP (about 4 minutes)
- *   1. sheets.new  →  name it "nsqrai leads"
- *   2. Extensions → Apps Script. Delete the stub, paste this whole file, Save.
- *   3. Run  ▶ setupSheet  once. Approve the permission prompt when asked.
+ *   1. sheets.new  ->  name it "nsqrai leads"
+ *   2. Extensions -> Apps Script. Delete the stub, paste this whole file, Save.
+ *   3. Run  > setupSheet  once. Approve the permission prompt when asked.
  *      (That builds the headers, the Status dropdown and the colour rules.)
- *   4. Deploy → New deployment → type "Web app"
+ *   4. Deploy -> New deployment -> type "Web app"
  *          Execute as:     Me
  *          Who has access: Anyone
  *      Anyone is required so the public form can POST. The URL only appends rows
- *      and emails you — it cannot read your Sheet, Gmail or Drive.
+ *      and emails you - it cannot read your Sheet, Gmail or Drive.
  *   5. Copy the /exec URL and send it to me. I'll wire the site to it.
  *
  * HOW TO WORK THE PIPELINE
  *   Change Status and everything else follows automatically:
- *     • set it to Replied  → "Replied On" stamps itself with today's date
- *     • set it to anything → "Days Waiting" stops counting
+ *     * set it to Replied  -> "Replied On" stamps itself with today's date
+ *     * set it to anything -> "Days Waiting" stops counting
  *   Use "Reason / Notes" for why they got in touch and what you agreed.
  */
 
@@ -69,7 +69,7 @@ function doPost(e) {
   }
 }
 
-/** Health check — opening the URL in a browser should show this. */
+/** Health check - opening the URL in a browser should show this. */
 function doGet() {
   return json_({ ok: true, service: 'nsqrai lead capture' });
 }
@@ -155,7 +155,7 @@ function getSheet_() {
 function notify_(data) {
   MailApp.sendEmail({
     to: NOTIFY_TO,
-    subject: 'New nsqrai.com lead — ' + (data.name || data.email),
+    subject: 'New nsqrai.com lead - ' + (data.name || data.email),
     replyTo: data.email,
     body: [
       'Name:    ' + (data.name || '(not given)'),
@@ -166,7 +166,7 @@ function notify_(data) {
       data.message || '(none)',
       '',
       'Reply directly to this email to answer them.',
-      'Logged to the nsqrai leads sheet — set Status there once you reply.',
+      'Logged to the nsqrai leads sheet - set Status there once you reply.',
     ].join('\n'),
   });
 }

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment received — NSQR AI</title>
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --bg:#04050c;--text:#e9edf7;--muted:#8b9ab8;--dim:#5a6a8a;
+  --line:#151b2e;--cyan:#3ef0d8;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+  font-family:var(--sans);line-height:1.6;display:grid;place-items:center;padding:28px;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% 30%,rgba(62,240,216,.10),transparent 70%)}
+.card{max-width:560px;text-align:center;position:relative;z-index:1}
+.tick{width:64px;height:64px;margin:0 auto 30px;border-radius:50%;
+  border:1.5px solid var(--cyan);display:grid;place-items:center;
+  box-shadow:0 0 50px rgba(62,240,216,.28)}
+.tick svg{width:28px;height:28px;stroke:var(--cyan);stroke-width:2.4;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.03em;margin:0 0 16px;font-weight:600;
+  background:linear-gradient(180deg,#fff,#a9b6d4 65%,#5d6b90);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+p{color:var(--muted);margin:0 0 14px}
+.meta{font-family:var(--mono);font-size:.78rem;color:var(--dim);letter-spacing:.1em;
+  margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+.btn{display:inline-block;margin-top:26px;background:var(--cyan);color:#03110f;
+  text-decoration:none;padding:12px 24px;border-radius:100px;font-weight:640;font-size:.9rem}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="tick">
+      <svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+    </div>
+    <h1>Payment received.</h1>
+    <p>Thank you. A receipt is on its way to the email address you entered at checkout.</p>
+    <p>Your credit will be applied to your account and reconciled against your invoice.
+       If anything looks wrong, reply to the receipt or email
+       <a href="mailto:billing@nsqrai.com">billing@nsqrai.com</a> and I'll sort it out.</p>
+    <a class="btn" href="/">Back to nsqrai.com</a>
+    <div class="meta">NSQR AI · AI INFRASTRUCTURE DESIGN</div>
+  </div>
+</body>
+</html>
