@@ -33,12 +33,49 @@ left out. Credibility is carried by technical specificity in the copy instead.
   pushed to Squarespace programmatically. Its website plan was declined ($23/mo) — the
   trial site was private-only and lapses ~Aug 14 2026.
 
-## Contact form
+## Contact form — LIVE
 Posts to a **Google Apps Script** web app (`scripts/leads-apps-script.gs`) that appends to
-a Sheet and emails `nicolas@nsqrai.com`. Set `LEADS_ENDPOINT` near the bottom of
-`index.html` to the deployed `/exec` URL. Uses `mode: 'no-cors'` — Apps Script returns no
-CORS headers, so the response is opaque and success cannot be read from the fetch.
-A honeypot field (`company_website`) is silently dropped server-side.
+the **"nsqrai leads"** Sheet (tab `Leads`) and emails `info@nsqrai.com`. Deployed as a Web
+app, *Execute as Me / Access Anyone*; `LEADS_ENDPOINT` in `index.html` holds the `/exec`
+URL (also in `~/.config/nsqrai/credentials.env`).
+🪤 **The Sheet and script MUST live under `nicolasquirozr@nsqrai.com`, not the personal
+Gmail.** `sheets.new` opens under whichever account is `/u/0` — that was the Gmail. Use
+`https://docs.google.com/spreadsheets/u/1/create` and check the Apps Script editor's
+"signed in as" banner before doing anything.
+🪤 **The Run function selector is unreliable under automation** — it silently reverts to the
+previous function, and pressing Escape cancels the selection. `START_HERE_buildSheet` is
+defined **first on purpose**: Apps Script defaults the Run selector to the first function
+after a page reload, which sidesteps the dropdown entirely.
+🪤 **Testing with curl:** a POST returns **302** to `script.googleusercontent.com/macros/echo`
+— that means `doPost` ALREADY RAN. Following it with `-L` re-POSTs and yields a misleading
+**405**. Capture `%{redirect_url}` and GET it separately to read the JSON.
+Uses `mode: 'no-cors'` in the browser — Apps Script sends no CORS headers, so the response
+is opaque and success cannot be read from the fetch. A honeypot field (`company_website`)
+is silently dropped server-side; invalid emails are rejected.
+
+## Email — aliases live
+Primary user `nicolasquirozr@nsqrai.com`, with aliases **`nicolas@`**, **`billing@`** and
+**`info@`**. `billing@` is also a Gmail *send-as* identity named "NSQR AI Billing" (no
+verification email needed — Workspace aliases on a verified domain are trusted).
+⚠️ Gmail is still set to **"Always reply from default address"**, so replies to `billing@`
+or `info@` go out as `nicolasquirozr@`. Switch to "Reply from the same address" if wanted.
+💡 Role addresses must be **aliases or Groups, never extra users** — a user seat is
+$19.80/mo, an alias is free (30 per user).
+
+## Payments — Stripe, TEST mode
+`pay.html` links a Stripe **payment link** with a customer-chosen amount (`custom_unit_amount`,
+min $1, preset $2,500), card + **ACH** (`us_bank_account`), an optional invoice-number custom
+field, and a redirect to `thanks.html`. Keys live in `~/.config/nsqrai/credentials.env`.
+🛑 **Still `sk_test_` — no real money moves.** The account has `charges_enabled: false` /
+`details_submitted: false`. Activate Stripe, then regenerate the product/price/link against
+the live key and swap the URL in `pay.html`. The ACH bank-transfer block still shows
+`[ADD ACCOUNT NUMBER]` placeholders.
+💰 Why ACH matters: on a $20k invoice card costs ~$580, ACH is capped at **$5**.
+
+## Squarespace
+Domain registration only — **no website plan, and none needed**. Their 14-day trial site was
+disconnected ("Park this domain") and the whole `Squarespace Defaults` DNS preset deleted,
+including an `HTTPS` record whose `ipv4hint` would have kept sending browsers to Squarespace.
 
 ## Credentials
 `~/.config/nsqrai/credentials.env` (mode 600, outside every repo — never commit it).
