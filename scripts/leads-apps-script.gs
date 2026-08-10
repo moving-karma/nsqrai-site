@@ -24,6 +24,16 @@
  *   Use "Reason / Notes" for why they got in touch and what you agreed.
  */
 
+// ---------------------------------------------------------------- run me first
+/**
+ * ENTRY POINT - run this once from the editor to build the sheet.
+ * Defined first on purpose: the Run selector defaults to the first function,
+ * so there is nothing to choose from a dropdown.
+ */
+function START_HERE_buildSheet() {
+  setupSheet();
+}
+
 // ---------------------------------------------------------------- config
 var NOTIFY_TO   = 'info@nsqrai.com';
 var SHEET_NAME  = 'Leads';
