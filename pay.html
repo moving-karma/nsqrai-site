@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay an invoice — NSQR AI</title>
+<meta name="description" content="Payment options for NSQR AI infrastructure design engagements.">
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --bg:#04050c;--bg-2:#070915;--panel:#0a0e1c;
+  --line:#151b2e;--line-2:#232c47;
+  --text:#e9edf7;--muted:#8b9ab8;--dim:#5a6a8a;
+  --cyan:#3ef0d8;--amber:#ffb545;--red:#ff5c6b;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --maxw:1000px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;position:relative;z-index:2}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(62,240,216,.07),transparent 70%)}
+
+h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);font-weight:600}
+h2{font-size:1.34rem;font-weight:620;letter-spacing:-.015em}
+.grad{background:linear-gradient(180deg,#fff,#a9b6d4 62%,#5d6b90);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);margin:0 0 18px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:26px;height:1px;background:currentColor;opacity:.6}
+.lede{font-size:1.08rem;color:var(--muted);max-width:58ch}
+
+header{border-bottom:1px solid var(--line);padding:18px 0;position:relative;z-index:2}
+header .wrap{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:640;letter-spacing:-.02em}
+.logo-mark{width:24px;height:24px;border:1.5px solid var(--cyan);border-radius:6px;display:grid;place-items:center;flex:0 0 auto}
+.logo-mark::after{content:"";width:7px;height:7px;background:var(--cyan);border-radius:1px;box-shadow:0 0 12px var(--cyan)}
+header a.back{text-decoration:none;color:var(--muted);font-size:.88rem}
+header a.back:hover{color:var(--cyan)}
+
+main{padding:72px 0 96px}
+.methods{display:grid;gap:16px;margin:44px 0 0}
+.method{
+  background:linear-gradient(180deg,rgba(16,22,42,.7),rgba(8,11,22,.7));
+  border:1px solid var(--line);border-radius:14px;padding:26px 26px;
+  display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center;
+}
+@media(max-width:700px){.method{grid-template-columns:1fr}}
+.method.primary{border-color:rgba(62,240,216,.4)}
+.tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:4px 9px;border-radius:100px;border:1px solid currentColor;display:inline-block;margin-bottom:12px}
+.tag.pref{color:var(--cyan)}
+.tag.alt{color:var(--dim)}
+.method h2{margin-bottom:8px}
+.method p{color:var(--muted);font-size:.94rem;margin:0}
+.method dl{margin:16px 0 0;font-family:var(--mono);font-size:.82rem;display:grid;grid-template-columns:auto 1fr;gap:6px 18px}
+.method dt{color:var(--dim);letter-spacing:.08em}
+.method dd{margin:0;color:var(--text)}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;background:var(--cyan);color:#03110f;
+  text-decoration:none;padding:12px 22px;border-radius:100px;font-weight:640;font-size:.9rem;
+  white-space:nowrap;transition:transform .18s,box-shadow .18s;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(62,240,216,.35)}
+.btn.disabled{background:var(--line-2);color:var(--dim);pointer-events:none}
+
+.todo{border:1px dashed var(--amber);background:rgba(255,181,69,.06);border-radius:10px;padding:18px 20px;margin:34px 0 0}
+.todo b{color:var(--amber);font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;display:block;margin-bottom:7px}
+.todo span{color:var(--muted);font-size:.9rem}
+
+.note{margin:44px 0 0;padding:24px;border-left:2px solid var(--cyan);background:rgba(12,17,32,.6);border-radius:0 10px 10px 0}
+.note .k{font-family:var(--mono);font-size:.68rem;letter-spacing:.17em;color:var(--cyan);text-transform:uppercase}
+.note p{margin:10px 0 0;color:var(--muted);font-size:.94rem}
+.note p+p{margin-top:10px}
+
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--dim);font-size:.85rem;position:relative;z-index:2}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="/"><span class="logo-mark"></span> NSQR&nbsp;AI</a>
+    <a class="back" href="/">← Back to site</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <p class="eyebrow">Billing</p>
+    <h1 class="grad">Pay an invoice.</h1>
+    <p class="lede">
+      If you've received an invoice from NSQR AI, you can settle it using any of the
+      methods below. Always include your <strong>invoice number</strong> as the payment
+      reference so it can be matched to your account.
+    </p>
+
+    <div class="methods">
+
+      <div class="method primary">
+        <div>
+          <span class="tag pref">Preferred</span>
+          <h2>Bank transfer / ACH</h2>
+          <p>The fastest way to clear a larger invoice, and the method with no processing
+             fee on either side. Funds typically settle in 1–3 business days.</p>
+          <dl>
+            <dt>ACCOUNT NAME</dt><dd>[ADD ACCOUNT NAME]</dd>
+            <dt>ACCOUNT NO.</dt><dd>[ADD ACCOUNT NUMBER]</dd>
+            <dt>ROUTING NO.</dt><dd>[ADD ROUTING NUMBER]</dd>
+            <dt>REFERENCE</dt><dd>Your invoice number</dd>
+          </dl>
+        </div>
+        <a class="btn disabled" href="#">Details on invoice</a>
+      </div>
+
+      <div class="method">
+        <div>
+          <span class="tag alt">Convenient</span>
+          <h2>Card or online payment</h2>
+          <p>Pay by credit card, debit card, or digital wallet through a secure hosted
+             checkout. Best for smaller invoices and deposits where speed matters more
+             than fees.</p>
+        </div>
+        <a class="btn disabled" id="pay-link" href="#">Link coming</a>
+      </div>
+
+      <div class="method">
+        <div>
+          <span class="tag alt">On request</span>
+          <h2>International wire</h2>
+          <p>Available for clients outside the US. Contact billing for SWIFT/IBAN details
+             and the correct intermediary instructions before sending.</p>
+        </div>
+        <a class="btn" href="mailto:billing@nsqrai.com?subject=International%20wire%20details">Request details</a>
+      </div>
+
+    </div>
+
+    <div class="todo">
+      <b>▲ NOT LIVE YET — needs your input</b>
+      <span>Three things before this page can be published: (1) bank details for the ACH
+      block, (2) a hosted payment link once a processor account exists, (3) confirm
+      <code>billing@nsqrai.com</code> is receiving mail. The page is currently
+      <code>noindex</code> and unlinked so nobody can reach it by accident.</span>
+    </div>
+
+    <div class="note">
+      <div class="k">Questions about an invoice</div>
+      <p>Email <a href="mailto:billing@nsqrai.com">billing@nsqrai.com</a> with your invoice
+         number and I'll respond within one business day.</p>
+      <p>Payment terms, scope and any agreed milestones are stated on the invoice itself.
+         If something doesn't match what we discussed, tell me before paying — it's far
+         easier to correct an invoice than to reverse a payment.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+    <div>© 2026 NSQR AI · AI infrastructure design &amp; specification</div>
+    <div><a href="mailto:billing@nsqrai.com">billing@nsqrai.com</a></div>
+  </div>
+</footer>
+</body>
+</html>
