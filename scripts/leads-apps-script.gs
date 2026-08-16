@@ -126,6 +126,12 @@ function bankConfig_() {
     accountType:   (p.getProperty('BANK_ACCOUNT_TYPE')   || 'Business Checking').trim(),
     address:       (p.getProperty('BUSINESS_ADDRESS')    || '').trim(),
     termsDays:     parseInt(p.getProperty('PAYMENT_TERMS_DAYS'), 10) || 14,
+    // No BANK_ADDRESS: a domestic ACH or wire to Capital One clears on account
+    // holder + ABA + account number. The address that matters is OURS (the
+    // beneficiary's), which is BUSINESS_ADDRESS above - matching invoice 009.
+    swift:         (p.getProperty('BANK_SWIFT')          || '').trim(),
+    phone:         (p.getProperty('BUSINESS_PHONE')      || '').trim(),
+    ein:           (p.getProperty('BUSINESS_EIN')        || '').trim(),
   };
   // Validate shape, not just presence. A placeholder left in the property
   // ("PASTE_ACCOUNT_NUMBER") is truthy, and would sail through a presence check
@@ -296,11 +302,22 @@ function emailInvoice_(r, cfg) {
 
   var plain = [
     'Invoice ' + r.invoiceNo,
+    '',
     'NSQR AI - AI infrastructure design & specification',
+    cfg.address || null,
+    'billing@nsqrai.com' + (cfg.phone ? '  ' + cfg.phone : ''),
+    cfg.ein ? 'EIN ' + cfg.ein : null,
     '',
     'Issued:      ' + fmtDate_(r.issued),
     'Due:         ' + fmtDate_(r.due),
-    'Billed to:   ' + (r.company || r.name),
+    'Terms:       Net ' + cfg.termsDays + ' days',
+    'Currency:    USD',
+    '',
+    'BILL TO',
+    r.company || r.name,
+    (r.company && r.name) ? r.name : null,
+    r.billingAddress || null,
+    r.email,
     '',
     pad_('DESCRIPTION', 46) + 'AMOUNT',
     pad_(CREDIT_LABEL, 46) + money_(r.amount),
@@ -308,16 +325,26 @@ function emailInvoice_(r, cfg) {
     '',
     pad_('TOTAL DUE', 46) + money_(r.amount),
     '',
-    'PAY BY BANK TRANSFER / ACH',
-    '  Account name:    ' + cfg.accountName,
-    '  Bank:            ' + cfg.bankName,
+    'WIRE / ACH INSTRUCTIONS',
+    '  Account holder:  ' + cfg.accountName,
+    cfg.address ? '  Address:         ' + cfg.address : null,
+    '  Bank name:       ' + cfg.bankName,
     '  Account number:  ' + cfg.accountNumber,
     '  Routing number:  ' + cfg.routingNumber,
     '  Account type:    ' + cfg.accountType,
+    '  Currency:        USD',
     '  REFERENCE:       ' + r.invoiceNo + '   <- include this',
     '',
-    'The reference is how the payment gets matched to you. Without it,',
+    'The same routing number works for ACH and for a domestic wire. The',
+    'reference is how the payment gets matched to you; without it,',
     'reconciliation is manual and slower.',
+    '',
+    cfg.swift ? 'INTERNATIONAL WIRE' : 'Paying from outside the US? Email billing@nsqrai.com for',
+    cfg.swift ? '  SWIFT / BIC:     ' + cfg.swift : 'international wire instructions before sending.',
+    cfg.swift ? '  Account holder:  ' + cfg.accountName : null,
+    cfg.swift ? '  Account number:  ' + cfg.accountNumber : null,
+    cfg.swift ? '  Send in USD and ask your bank to pay all correspondent' : null,
+    cfg.swift ? '  charges (OUR) so the full invoiced amount arrives.' : null,
     '',
     r.amount <= CARD_LIMIT
       ? 'Prefer to pay by card? ' + STRIPE_LINK + ' (a processing fee applies)'
@@ -328,9 +355,10 @@ function emailInvoice_(r, cfg) {
     '',
     'Questions: billing@nsqrai.com',
     cfg.address ? 'NSQR AI, ' + cfg.address : 'NSQR AI',
-  // No blank-line filter here: '' entries ARE the paragraph breaks. Stripping
-  // them (as an earlier version did) collapsed the whole invoice into one block.
-  ].join('\n');
+  // null means "field not configured, drop the line"; '' means "paragraph
+  // break, keep it". An earlier version filtered on '' and collapsed the whole
+  // invoice into a single unreadable block.
+  ].filter(function (l) { return l !== null; }).join('\n');
 
   var html = invoiceHtml_(r, cfg);
 
@@ -363,19 +391,38 @@ function invoiceHtml_(r, cfg) {
     '<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;',
     'max-width:600px;margin:0 auto;padding:34px 28px;color:#0f172a;line-height:1.6">',
 
-    '<div style="border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:26px">',
+    // FROM / remit-to. A bare business name is not enough on a document that
+    // carries payment instructions - the payer's finance team needs a postal
+    // address to file it, and a wire needs the beneficiary address anyway.
+    '<table style="width:100%;border-collapse:collapse;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:26px">',
+    '<tr><td style="padding-bottom:16px;vertical-align:top">',
     '<div style="font-size:19px;font-weight:700;letter-spacing:-.02em">NSQR AI</div>',
     '<div style="font-size:12px;color:#64748b">AI infrastructure design &amp; specification</div>',
-    '</div>',
+    cfg.address ? '<div style="font-size:12px;color:#64748b;margin-top:6px">' + esc_(cfg.address) + '</div>' : '',
+    '<div style="font-size:12px;color:#64748b">billing@nsqrai.com',
+    cfg.phone ? ' &middot; ' + esc_(cfg.phone) : '', '</div>',
+    cfg.ein ? '<div style="font-size:12px;color:#64748b">EIN ' + esc_(cfg.ein) + '</div>' : '',
+    '</td></tr></table>',
 
     '<div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#0d9488;font-weight:700">Invoice</div>',
     '<div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin:2px 0 22px">', esc_(r.invoiceNo), '</div>',
 
-    '<table style="border-collapse:collapse;margin-bottom:26px">',
+    '<table style="border-collapse:collapse;margin-bottom:10px">',
     row('Issued', fmtDate_(r.issued)),
     row('Due', fmtDate_(r.due)),
-    row('Billed to', r.company || r.name || r.email),
+    row('Terms', 'Net ' + cfg.termsDays + ' days'),
+    row('Currency', 'USD'),
     '</table>',
+
+    '<div style="margin-bottom:26px">',
+    '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px">Bill to</div>',
+    '<div style="font-size:14px;color:#0f172a;font-weight:600">', esc_(r.company || r.name || r.email), '</div>',
+    r.company && r.name ? '<div style="font-size:13px;color:#475569">' + esc_(r.name) + '</div>' : '',
+    r.billingAddress
+      ? '<div style="font-size:13px;color:#475569;white-space:pre-line">' + esc_(r.billingAddress) + '</div>'
+      : '',
+    '<div style="font-size:13px;color:#475569">', esc_(r.email), '</div>',
+    '</div>',
 
     // The single billable line. Nothing the client typed is priced or
     // described here - only the amount they chose.
@@ -405,19 +452,41 @@ function invoiceHtml_(r, cfg) {
 
     '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:20px 22px;margin-bottom:22px">',
     '<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#0f766e;font-weight:700;margin-bottom:12px">',
-    'Pay by bank transfer / ACH</div>',
+    'Wire / ACH instructions</div>',
     '<table style="border-collapse:collapse">',
-    row('Account name', cfg.accountName),
-    row('Bank', cfg.bankName),
+    row('Account holder', cfg.accountName),
+    cfg.address ? row('Address', cfg.address) : '',
+    row('Bank name', cfg.bankName),
     row('Account number', cfg.accountNumber, true),
     row('Routing number', cfg.routingNumber, true),
     row('Account type', cfg.accountType),
+    row('Currency', 'USD'),
     row('Reference', r.invoiceNo, true),
     '</table>',
     '<div style="font-size:13px;color:#0f766e;margin-top:14px">',
-    'Please put <strong>', esc_(r.invoiceNo), '</strong> in the payment reference — that is how it gets matched to you.',
+    'Put <strong>', esc_(r.invoiceNo), '</strong> in the payment reference — that is how it gets matched to you. ',
+    'The same routing number works for ACH and for a domestic wire.',
     '</div>',
     '</div>',
+
+    // International is shown ONLY when a SWIFT/BIC is configured. Advertising
+    // it without one sends the payer to a bank that will reject the wire.
+    cfg.swift
+      ? '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:18px 22px;margin-bottom:22px">' +
+        '<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px">' +
+        'International wire</div>' +
+        '<table style="border-collapse:collapse">' +
+        row('SWIFT / BIC', cfg.swift, true) +
+        row('Account holder', cfg.accountName) +
+        (cfg.address ? row('Address', cfg.address) : '') +
+        row('Account number', cfg.accountNumber, true) +
+        '</table>' +
+        '<div style="font-size:13px;color:#64748b;margin-top:12px">' +
+        'Send in USD. Ask your bank to pay all correspondent charges (OUR) so the full ' +
+        'invoiced amount arrives.</div></div>'
+      : '<div style="font-size:13px;color:#475569;margin-bottom:22px">Paying from outside the US? ' +
+        'Email <a href="mailto:billing@nsqrai.com" style="color:#0d9488">billing@nsqrai.com</a> ' +
+        'for international wire instructions before sending.</div>',
 
     r.amount <= CARD_LIMIT
       ? '<div style="font-size:13px;color:#475569;margin-bottom:22px">Prefer to pay by card? ' +
