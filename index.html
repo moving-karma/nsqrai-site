@@ -80,7 +80,19 @@ nav{
 .nav-links{display:flex;gap:26px;align-items:center}
 .nav-links a{text-decoration:none;font-size:.88rem;color:var(--muted);transition:color .18s}
 .nav-links a:hover{color:var(--text)}
-@media(max-width:860px){.nav-links a:not(.btn){display:none}}
+/* Mobile: hide the in-page anchors only. They are reachable by scrolling, so
+   losing them costs nothing — but /pay.html is a SEPARATE PAGE, and hiding it
+   made billing unreachable on a phone. Never collapse a cross-page link here. */
+@media(max-width:860px){
+  .nav-links a[href^="#"]:not(.btn){display:none}
+  .nav-links{gap:16px}
+  .nav-cta-long{display:none}
+}
+@media(max-width:380px){
+  .nav-links{gap:12px}
+  nav{padding:8px 8px 8px 14px}
+  .nav-links a{font-size:.82rem}
+}
 
 .btn{
   display:inline-flex;align-items:center;gap:9px;
@@ -269,6 +281,12 @@ input,textarea{
 }
 input:focus,textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(62,240,216,.12)}
 textarea{resize:vertical;min-height:118px}
+/* iOS Safari zooms the whole page when a focused input is under 16px. 0.95rem
+   is 15.2px, so every field yanked the layout on tap. Do not drop below 16px. */
+@media(max-width:860px){
+  input,textarea{font-size:16px}
+  .btn{min-height:44px;padding-top:12px;padding-bottom:12px}
+}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .form-note{font-size:.79rem;color:var(--dim);margin:0}
 #form-status{font-family:var(--mono);font-size:.82rem;min-height:1.2em;margin:0}
@@ -308,7 +326,7 @@ footer a:hover{color:var(--cyan)}
       <a href="#process">Process</a>
       <a href="#about">About</a>
       <a href="/pay.html">Payments</a>
-      <a class="btn" href="#contact">Book a design call</a>
+      <a class="btn" href="#contact">Book a <span class="nav-cta-long">design </span>call</a>
     </div>
   </nav>
 </header>
@@ -601,7 +619,7 @@ footer a:hover{color:var(--cyan)}
 <footer>
   <div class="wrap foot">
     <div>© 2026 NSQR AI · AI infrastructure design &amp; specification</div>
-    <div><a href="mailto:nicolas@nsqrai.com">nicolas@nsqrai.com</a></div>
+    <div><a href="/pay.html">Payments</a> · <a href="mailto:nicolas@nsqrai.com">nicolas@nsqrai.com</a></div>
   </div>
 </footer>
 

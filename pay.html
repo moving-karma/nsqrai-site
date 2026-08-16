@@ -47,7 +47,11 @@ main{padding:72px 0 96px}
   border:1px solid var(--line);border-radius:14px;padding:26px 26px;
   display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center;
 }
-@media(max-width:700px){.method{grid-template-columns:1fr}}
+@media(max-width:700px){
+  .method{grid-template-columns:1fr}
+  /* stacked card: a left-aligned pill under the copy reads as an orphan */
+  .method .btn{width:100%;justify-content:center}
+}
 .method.primary{border-color:rgba(62,240,216,.4)}
 .tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
   padding:4px 9px;border-radius:100px;border:1px solid currentColor;display:inline-block;margin-bottom:12px}
@@ -107,6 +111,17 @@ button.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:non
 .f-status.ok{color:var(--cyan)}
 .f-status.err{color:var(--red)}
 .f-note{margin-top:16px;font-size:.82rem;color:var(--dim)}
+
+/* iOS Safari zooms the whole page when a focused input is under 16px. The
+   fields were 0.94rem = 15px, so tapping any of them jerked the layout.
+   Do not drop below 16px here. */
+@media(max-width:860px){
+  .invoice-req input,.invoice-req textarea{font-size:16px}
+  .btn{min-height:44px}
+  .invoice-req .btn{width:100%;justify-content:center}
+  .f-actions{gap:12px}
+  header .wrap a.back{padding:6px 0}
+}
 
 .note{margin:44px 0 0;padding:24px;border-left:2px solid var(--cyan);background:rgba(12,17,32,.6);border-radius:0 10px 10px 0}
 .note .k{font-family:var(--mono);font-size:.68rem;letter-spacing:.17em;color:var(--cyan);text-transform:uppercase}
