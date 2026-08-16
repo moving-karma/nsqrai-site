@@ -212,9 +212,15 @@ footer a:hover{color:var(--cyan)}
           <input id="email" name="email" type="email" autocomplete="email" required>
         </div>
         <div class="full">
-          <label for="message">PO number or note <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+          <label for="billing_address">Billing address <span style="text-transform:none;letter-spacing:0">(optional — appears on the invoice)</span></label>
+          <textarea id="billing_address" name="billing_address" rows="3"
+                    autocomplete="street-address"
+                    placeholder="100 Outwater Ln, Ste 1A&#10;Garfield, NJ 07026"></textarea>
+        </div>
+        <div class="full">
+          <label for="message">PO number or note <span style="text-transform:none;letter-spacing:0">(optional — for me, not shown on the invoice)</span></label>
           <textarea id="message" name="message"
-                    placeholder="Anything your finance team needs on the invoice."></textarea>
+                    placeholder="Anything you want me to know. This reaches me directly."></textarea>
         </div>
         <div class="hp" aria-hidden="true">
           <label for="company_website">Leave this empty</label>

@@ -111,9 +111,11 @@ var HEADERS  = ['Received', 'Name', 'Email', 'Company', 'What they need',
                 'Next Follow-up', 'Source'];
 
 var INVOICE_STATUSES = ['Sent', 'Paid', 'Part paid', 'Overdue', 'Void'];
+// Appended, never inserted: onEdit keys off Status = col 8 and Paid On = col 9,
+// so inserting a column in the middle would silently retarget the paid-stamp.
 var INVOICE_HEADERS  = ['Issued', 'Invoice No', 'Name', 'Email', 'Company',
                         'Amount (USD)', 'Due', 'Status', 'Paid On', 'Method',
-                        'Notes', 'Source'];
+                        'Notes', 'Source', 'Billing address'];
 
 /** Bank details, read from Script Properties. Never hardcode them here. */
 function bankConfig_() {
@@ -265,6 +267,9 @@ function handleInvoiceRequest_(data) {
     name: clean_(data.name, 80),
     email: data.email,
     company: clean_(data.company, 80),
+    // Prints in the Bill To block, so it keeps its line breaks (rendered with
+    // white-space:pre-line) but is still stripped of control characters.
+    billingAddress: cleanMultiline_(data.billing_address, 300),
     // note NEVER reaches the client's invoice. Operator-side only: the sheet
     // and the notification email. See emailInvoice_.
     note: clean_(data.message, 500),
@@ -277,6 +282,7 @@ function handleInvoiceRequest_(data) {
   sheet.appendRow([
     issued, invoiceNo, record.name, record.email, record.company,
     amount, due, 'Sent', '', 'Bank transfer', record.note, record.source,
+    record.billingAddress,
   ]);
 
   notifyInvoiceIssued_(record);
@@ -718,6 +724,23 @@ function clean_(v, max) {
     .replace(/\s+/g, ' ')                  // collapse whitespace runs
     .trim()
     .slice(0, max || 200);
+}
+
+/**
+ * Like clean_ but KEEPS newlines - for a postal address, which is meaningfully
+ * multi-line. Strips every other control character, caps blank runs at one, and
+ * trims each line so a client cannot indent junk into the Bill To block.
+ */
+function cleanMultiline_(v, max) {
+  return String(v === null || v === undefined ? '' : v)
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\x00-\x09\x0B-\x1F\x7F]+/g, ' ')  // controls except \n
+    .split('\n')
+    .map(function (line) { return line.replace(/\s+/g, ' ').trim(); })
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, max || 300);
 }
 
 /** Right-pad for the plain-text invoice columns, so they survive a label change. */
