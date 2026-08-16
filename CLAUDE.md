@@ -104,9 +104,56 @@ advertised ACH. Live method list: Card · US bank account · Cash App Pay · Kla
 (+ Link, + Apple Pay).
 
 🔒 **Do NOT publish the bank account/routing numbers on `pay.html`.** An account + routing pair on
-a public page is an ACH-debit fraud target, and it buys nothing: Stripe checkout already does ACH
-at the same $5 cap with no exposure. The transfer block says "details on your invoice" on purpose
-— the old `[ADD ACCOUNT NUMBER]` placeholders were removed, not filled in.
+a public page is an ACH-debit fraud target. They go out on an *invoice*, to a named client — see
+the deposit-invoice flow below. The old `[ADD ACCOUNT NUMBER]` placeholders were removed, not
+filled in.
+
+## Deposit invoicing — direct bank transfer, zero fee (2026-08-16)
+**The main path for anything sizeable. Stripe is the card/convenience option; this is the one that
+costs nothing.** `pay.html` carries a deposit form (amount + name + email + company + note). It
+POSTs `action=invoice` to the same Apps Script web app as the contact form, which issues
+`NSQR-<year>-<seq>`, emails the client an HTML invoice carrying our bank details and that number
+as the payment reference, logs a row to a new **`Invoices`** tab, and copies `billing@`.
+Client pays from their own bank. Set the row to **Paid** when it lands; `Paid On` self-stamps.
+
+🛑 **THE BANK DETAILS LIVE IN SCRIPT PROPERTIES, NEVER IN THE REPO.**
+`moving-karma/nsqrai-site` is **PUBLIC on GitHub** — anything hardcoded in
+`scripts/leads-apps-script.gs` is published on push, and git history keeps it after deletion.
+Keys (Apps Script → Project Settings → Script Properties):
+`BANK_ACCOUNT_NAME` · `BANK_NAME` · `BANK_ACCOUNT_NUMBER` · `BANK_ROUTING_NUMBER`; optional
+`BANK_ACCOUNT_TYPE` · `PAYMENT_TERMS_DAYS` (default 14) · `BUSINESS_ADDRESS`.
+Run `CHECK_bankDetails` to confirm they took — it prints set/MISSING and the last 4 only.
+**Fails safe:** with the keys unset the script refuses to send, emails `info@` an
+"ACTION NEEDED" alert, and tells the client we'll follow up — it never mails a blank invoice.
+`bankConfig_` validates **shape, not just presence** (account ≥ 4 digits, routing exactly 9,
+non-digits stripped) — a leftover placeholder like `PASTE_ACCOUNT_NUMBER` is truthy and would
+otherwise sail onto a client's invoice. 🪤 The Script Properties UI **rejects an empty value**
+("Value is required"), so a key cannot be pre-created blank and filled in later — it blocks the
+whole save.
+
+🪤 **The site's `fetch` cannot reliably read the reply** (Apps Script sends no CORS headers), so
+`pay.html` retries fire-and-forget on a failed read. **That would have issued two invoice numbers
+for one deposit.** Fixed with an idempotency key: the browser mints `request_id`, reuses it on the
+retry, and the script returns the cached original number instead of issuing a second.
+The POST is `text/plain` on purpose — a CORS *simple* request, so the browser skips the preflight
+Apps Script can't answer, which is what lets the invoice number be read back at all.
+`parseBody_` accepts urlencoded, JSON, and text/plain-JSON for that reason.
+
+🪤 **`MailApp`, deliberately not `GmailApp`.** Sending *as* the `billing@` alias needs `GmailApp`
+and a wider OAuth scope; a scope change forces re-authorisation, which would take the live contact
+form down until it is clicked through. `name` + `replyTo` get the same result on the existing scope.
+
+🪤 **Editing the script does NOT change what is deployed.** Saving updates HEAD; the web app keeps
+serving the deployed version. Confirm which is live with `GET <exec-url>` — the new code's `doGet`
+returns an extra `invoicing` field. To ship: **Deploy → Manage deployments → edit the EXISTING
+deployment → Version: New version.** A *new* deployment mints a different `/exec` URL and breaks
+the site. ⚠️ **Never push a `pay.html` deposit form ahead of the script** — the old code ignores
+`action`, files the request as a lead, and the client is told an invoice is coming that never was.
+
+🪤 Running any function from the editor after this rewrite prompts **"Authorization required"**.
+That is a Google OAuth consent screen and only the operator can complete it. Until then
+`START_HERE_buildSheets` cannot run — harmless, because `getOrCreateSheet_` builds the `Invoices`
+tab on first use anyway; only the dropdown, colours and number formats wait on that one run.
 
 ## Squarespace
 Domain registration only — **no website plan, and none needed**. Their 14-day trial site was
