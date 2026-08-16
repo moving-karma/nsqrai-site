@@ -93,6 +93,15 @@ var SHEET_NAME   = 'Leads';
 var INVOICE_SHEET_NAME = 'Invoices';
 var HONEYPOT     = 'company_website';      // hidden in the form; bots fill it in
 var STRIPE_LINK  = 'https://buy.stripe.com/bJe28s7ZPh075y9aZW0RG01';
+
+/**
+ * The ONLY thing we ever bill on this route. Every invoice carries exactly this
+ * one line, at the amount the client chose - nothing client-supplied is ever
+ * priced or described. Keep this in step with the Stripe product name so a card
+ * receipt and a bank invoice read identically on their books.
+ */
+var CREDIT_LABEL = 'Advisory credit';
+var CREDIT_DESC  = 'Prepaid credit, applied against future NSQR AI invoices';
 var CARD_LIMIT   = 10000;                  // Stripe per-transaction ceiling, USD
 var MAX_INVOICE  = 1000000;                // sanity bound on the amount field
 
@@ -245,11 +254,15 @@ function handleInvoiceRequest_(data) {
     issued: issued,
     due: due,
     amount: amount,
-    name: data.name || '',
+    // name/company DO appear on the invoice, so they are flattened to a single
+    // line and capped - a client cannot smuggle extra "terms" in via newlines.
+    name: clean_(data.name, 80),
     email: data.email,
-    company: data.company || '',
-    note: data.message || '',
-    source: data.source || 'nsqrai.com',
+    company: clean_(data.company, 80),
+    // note NEVER reaches the client's invoice. Operator-side only: the sheet
+    // and the notification email. See emailInvoice_.
+    note: clean_(data.message, 500),
+    source: clean_(data.source, 60) || 'nsqrai.com',
   };
 
   emailInvoice_(record, cfg);
@@ -285,10 +298,15 @@ function emailInvoice_(r, cfg) {
     'Invoice ' + r.invoiceNo,
     'NSQR AI - AI infrastructure design & specification',
     '',
-    'Amount due:  ' + money_(r.amount),
     'Issued:      ' + fmtDate_(r.issued),
     'Due:         ' + fmtDate_(r.due),
-    r.company ? 'Billed to:   ' + r.company : 'Billed to:   ' + r.name,
+    'Billed to:   ' + (r.company || r.name),
+    '',
+    pad_('DESCRIPTION', 46) + 'AMOUNT',
+    pad_(CREDIT_LABEL, 46) + money_(r.amount),
+    '  ' + CREDIT_DESC,
+    '',
+    pad_('TOTAL DUE', 46) + money_(r.amount),
     '',
     'PAY BY BANK TRANSFER / ACH',
     '  Account name:    ' + cfg.accountName,
@@ -308,11 +326,11 @@ function emailInvoice_(r, cfg) {
     'This deposit is held as credit on your account and drawn down by the work',
     'invoiced against it. Unused credit is refundable.',
     '',
-    r.note ? 'Your note: ' + r.note : '',
-    '',
     'Questions: billing@nsqrai.com',
     cfg.address ? 'NSQR AI, ' + cfg.address : 'NSQR AI',
-  ].filter(function (l) { return l !== ''; }).join('\n');
+  // No blank-line filter here: '' entries ARE the paragraph breaks. Stripping
+  // them (as an earlier version did) collapsed the whole invoice into one block.
+  ].join('\n');
 
   var html = invoiceHtml_(r, cfg);
 
@@ -354,10 +372,35 @@ function invoiceHtml_(r, cfg) {
     '<div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin:2px 0 22px">', esc_(r.invoiceNo), '</div>',
 
     '<table style="border-collapse:collapse;margin-bottom:26px">',
-    row('Amount due', money_(r.amount), true),
     row('Issued', fmtDate_(r.issued)),
     row('Due', fmtDate_(r.due)),
     row('Billed to', r.company || r.name || r.email),
+    '</table>',
+
+    // The single billable line. Nothing the client typed is priced or
+    // described here - only the amount they chose.
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:26px">',
+    '<tr>',
+    '<th style="text-align:left;padding:0 0 8px;border-bottom:1px solid #cbd5e1;',
+    'font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700">Description</th>',
+    '<th style="text-align:right;padding:0 0 8px;border-bottom:1px solid #cbd5e1;',
+    'font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700">Amount</th>',
+    '</tr>',
+    '<tr>',
+    '<td style="padding:16px 16px 16px 0;border-bottom:1px solid #e2e8f0;vertical-align:top">',
+    '<div style="font-size:15px;font-weight:600;color:#0f172a">', esc_(CREDIT_LABEL), '</div>',
+    '<div style="font-size:13px;color:#64748b;margin-top:3px">', esc_(CREDIT_DESC), '</div>',
+    '</td>',
+    '<td style="padding:16px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top;',
+    'font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;color:#0f172a">',
+    esc_(money_(r.amount)), '</td>',
+    '</tr>',
+    '<tr>',
+    '<td style="padding:14px 16px 0 0;text-align:right;font-size:13px;letter-spacing:.1em;',
+    'text-transform:uppercase;color:#64748b;font-weight:700">Total due</td>',
+    '<td style="padding:14px 0 0;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;',
+    'font-size:22px;font-weight:700;color:#0f172a">', esc_(money_(r.amount)), '</td>',
+    '</tr>',
     '</table>',
 
     '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:20px 22px;margin-bottom:22px">',
@@ -383,11 +426,10 @@ function invoiceHtml_(r, cfg) {
       : '<div style="font-size:13px;color:#475569;margin-bottom:22px">This amount is above the online card limit, ' +
         'so bank transfer is the way to settle it.</div>',
 
-    r.note
-      ? '<div style="border-left:3px solid #e2e8f0;padding:2px 0 2px 14px;margin-bottom:22px;font-size:13px;color:#475569">' +
-        '<div style="color:#94a3b8;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Your note</div>' +
-        esc_(r.note) + '</div>'
-      : '',
+    // r.note is DELIBERATELY absent. It is free text from a public form, and
+    // this is a branded invoice - echoing it back would let anyone mint an
+    // NSQR AI document saying whatever they typed. It goes to the operator
+    // only, via notifyInvoiceIssued_ and the Invoices sheet.
 
     '<div style="font-size:13px;color:#475569;border-top:1px solid #e2e8f0;padding-top:18px">',
     'This deposit is held as <strong>credit on your account</strong> and drawn down by the work invoiced ',
@@ -416,7 +458,10 @@ function notifyInvoiceIssued_(r) {
       'Email:   ' + r.email,
       'Company: ' + (r.company || '(not given)'),
       'Due:     ' + fmtDate_(r.due),
-      'Note:    ' + (r.note || '(none)'),
+      '',
+      '--- PO / note (client typed this; it is NOT on their invoice) ---',
+      r.note || '(none)',
+      '----------------------------------------------------------------',
       '',
       'Logged to the Invoices sheet as Sent.',
       'When the money lands in the bank, set that row to Paid - the reference on',
@@ -591,6 +636,26 @@ function notify_(data) {
       'Logged to the nsqrai leads sheet - set Status there once you reply.',
     ].join('\n'),
   });
+}
+
+/**
+ * Flatten and cap a client-supplied string. Newlines and control characters
+ * are collapsed to spaces so a value that lands on the invoice (name, company)
+ * cannot be used to fake extra lines of "terms" under the billed-to field.
+ */
+function clean_(v, max) {
+  return String(v === null || v === undefined ? '' : v)
+    .replace(/[\x00-\x1F\x7F]+/g, ' ')   // control chars incl. CR/LF/TAB
+    .replace(/\s+/g, ' ')                  // collapse whitespace runs
+    .trim()
+    .slice(0, max || 200);
+}
+
+/** Right-pad for the plain-text invoice columns, so they survive a label change. */
+function pad_(s, width) {
+  s = String(s);
+  while (s.length < width) s += ' ';
+  return s;
 }
 
 /** "$2,500" / "2500.00" / " 2,500 " -> 2500. Returns NaN on junk. */
