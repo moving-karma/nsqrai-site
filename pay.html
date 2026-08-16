@@ -158,12 +158,13 @@ footer a:hover{color:var(--cyan)}
 
       <div class="method primary">
         <div>
-          <span class="tag pref">Preferred</span>
-          <h2>Pay online — any amount</h2>
-          <p>Card or direct bank debit (ACH) through Stripe's secure checkout. You choose
-             the amount, so the same link works for a deposit, a milestone, a full invoice,
-             or credit on account. Paying by <strong>bank debit costs you nothing</strong>
-             and caps my processing fee at $5 — it's the better choice on anything large.</p>
+          <span class="tag pref">Fastest</span>
+          <h2>Pay now by card or bank debit</h2>
+          <p>Stripe's secure checkout, settled on the spot. You choose the amount, so the
+             same link covers a deposit, a milestone or a full invoice. Choosing
+             <strong>bank debit</strong> at checkout authorises a one-off pull from your
+             account and caps my processing fee at $5 — cheaper than card on anything
+             sizeable, and nothing for you to key in at your bank.</p>
           <dl>
             <dt>ACCEPTS</dt><dd>Card · US&nbsp;bank&nbsp;debit (ACH) · Apple&nbsp;Pay · Cash&nbsp;App&nbsp;Pay</dd>
             <dt>AMOUNT</dt><dd>You choose — up to $10,000 per payment</dd>
@@ -175,41 +176,19 @@ footer a:hover{color:var(--cyan)}
            href="https://buy.stripe.com/bJe28s7ZPh075y9aZW0RG01">Pay now →</a>
       </div>
 
-      <div class="method">
-        <div>
-          <span class="tag alt">On request</span>
-          <h2>Direct bank transfer</h2>
-          <p>No processing fee on either side, and no limit — the way to settle anything
-             above $10,000. Tell me the amount below and an invoice lands in your inbox
-             within a minute, with the account details and a reference number on it.</p>
-          <dl>
-            <dt>FEE</dt><dd>None</dd>
-            <dt>AMOUNT</dt><dd>Any</dd>
-            <dt>SETTLES</dt><dd>1–3 business days</dd>
-          </dl>
-        </div>
-        <a class="btn" href="#request-invoice">Get an invoice ↓</a>
-      </div>
-
-      <div class="method">
-        <div>
-          <span class="tag alt">On request</span>
-          <h2>International wire</h2>
-          <p>Available for clients outside the US. Contact billing for SWIFT/IBAN details
-             and the correct intermediary instructions before sending.</p>
-        </div>
-        <a class="btn" href="mailto:billing@nsqrai.com?subject=International%20wire%20details">Request details</a>
-      </div>
-
     </div>
 
+    <!-- This form IS the bank-transfer option. It used to be preceded by a
+         "Direct bank transfer" card whose only job was to scroll down to it —
+         the same path described twice. -->
     <form class="invoice-req" id="request-invoice" novalidate>
-      <span class="tag pref">No fee</span>
-      <h2>Request an invoice for a bank transfer</h2>
-      <p>Say how much you want to deposit and where to send it. You'll get an invoice by
-         email straight away, carrying the account details and a reference number — pay it
-         from your own bank whenever it suits you. Nothing is charged here and no card is
-         involved.</p>
+      <span class="tag pref">No fee · any amount</span>
+      <h2>Or pay by bank transfer</h2>
+      <p>Push the money from your own bank instead. <strong>No processing fee on either
+         side and no $10,000 ceiling</strong>, so it's the way to settle anything large.
+         Tell me the amount and you'll get an invoice by email carrying the account details
+         and a reference number — pay it whenever it suits you. Nothing is charged here and
+         no card is involved. Transfers settle in 1–3 business days.</p>
 
       <div class="f-grid">
         <div>
@@ -251,6 +230,18 @@ footer a:hover{color:var(--cyan)}
       <p class="f-note">Requesting an invoice doesn't commit you to anything, and the deposit
          stays as credit on your account until work is invoiced against it.</p>
     </form>
+
+    <div class="methods" style="margin-top:16px">
+      <div class="method">
+        <div>
+          <span class="tag alt">On request</span>
+          <h2>International wire</h2>
+          <p>Available for clients outside the US. Contact billing for SWIFT/IBAN details
+             and the correct intermediary instructions before sending.</p>
+        </div>
+        <a class="btn" href="mailto:billing@nsqrai.com?subject=International%20wire%20details">Request details</a>
+      </div>
+    </div>
 
     <div class="note">
       <div class="k">How account credit works</div>
