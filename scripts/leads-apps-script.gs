@@ -51,6 +51,20 @@
  *   cleared - the bank statement reference will match the invoice number.
  *
  *   Nothing here moves money. It issues a request to pay and records it.
+ *
+ * ============================================================================
+ * KEEP THIS FILE PURE ASCII
+ * ============================================================================
+ *   Deploying means pasting this through the system clipboard into the Apps
+ *   Script editor, and that hop does NOT preserve UTF-8 reliably (this machine
+ *   has LANG/LC_ALL/LC_CTYPE all unset). A literal em-dash reached a real
+ *   client invoice as ",Ai" and a middot as "A.".
+ *
+ *   Use HTML entities for typography: &mdash; &middot; &nbsp;
+ *   Note they cannot go INSIDE esc_(), which would escape the & to &amp;.
+ *   Check before deploying:
+ *     python3 -c "s=open('scripts/leads-apps-script.gs',encoding='utf-8').read();
+ *     print([c for c in s if ord(c)>126] or 'clean')"
  */
 
 // ---------------------------------------------------------------- run me first
@@ -476,7 +490,7 @@ function invoiceHtml_(r, cfg) {
     row('Reference', r.invoiceNo, true),
     '</table>',
     '<div style="font-size:13px;color:#0f766e;margin-top:14px">',
-    'Put <strong>', esc_(r.invoiceNo), '</strong> in the payment reference — that is how it gets matched to you. ',
+    'Put <strong>', esc_(r.invoiceNo), '</strong> in the payment reference &mdash; that is how it gets matched to you. ',
     'The same routing number works for ACH and for a domestic wire.',
     '</div>',
     '</div>',
@@ -503,7 +517,7 @@ function invoiceHtml_(r, cfg) {
     r.amount <= CARD_LIMIT
       ? '<div style="font-size:13px;color:#475569;margin-bottom:22px">Prefer to pay by card? ' +
         '<a href="' + STRIPE_LINK + '" style="color:#0d9488">Pay online instead</a>' +
-        ' — a card processing fee applies, which is why bank transfer is preferred.</div>'
+        ' &mdash; a card processing fee applies, which is why bank transfer is preferred.</div>'
       : '<div style="font-size:13px;color:#475569;margin-bottom:22px">This amount is above the online card limit, ' +
         'so bank transfer is the way to settle it.</div>',
 
@@ -519,7 +533,7 @@ function invoiceHtml_(r, cfg) {
 
     '<div style="font-size:12px;color:#94a3b8;margin-top:24px">',
     'Questions about this invoice: <a href="mailto:billing@nsqrai.com" style="color:#0d9488">billing@nsqrai.com</a><br>',
-    cfg.address ? esc_('NSQR AI · ' + cfg.address) : 'NSQR AI',
+    cfg.address ? 'NSQR AI &middot; ' + esc_(cfg.address) : 'NSQR AI',
     '</div>',
 
     '</div>',
