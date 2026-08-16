@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pay an invoice — NSQR AI</title>
-<meta name="description" content="Payment options for NSQR AI infrastructure design engagements.">
+<title>Pay an invoice or add credit — NSQR AI</title>
+<meta name="description" content="Pay an NSQR AI invoice by card or bank debit, or put credit on account against future infrastructure design work.">
 <style>
 :root{
   --bg:#04050c;--bg-2:#070915;--panel:#0a0e1c;
@@ -93,11 +93,12 @@ footer a:hover{color:var(--cyan)}
 <main>
   <div class="wrap">
     <p class="eyebrow">Billing</p>
-    <h1 class="grad">Pay an invoice.</h1>
+    <h1 class="grad">Pay an invoice,<br>or put credit on account.</h1>
     <p class="lede">
-      If you've received an invoice from NSQR AI, you can settle it using any of the
-      methods below. Always include your <strong>invoice number</strong> as the payment
-      reference so it can be matched to your account.
+      Settling an invoice? Pay it below and include your <strong>invoice number</strong> so
+      it matches automatically. Starting an engagement? Pay any amount and it's held as
+      <strong>credit on your account</strong> — every invoice I raise draws that credit
+      down until it's used up, and only the remainder is ever due.
     </p>
 
     <div class="methods">
@@ -105,35 +106,35 @@ footer a:hover{color:var(--cyan)}
       <div class="method primary">
         <div>
           <span class="tag pref">Preferred</span>
-          <h2>Bank transfer / ACH</h2>
-          <p>The fastest way to clear a larger invoice, and the method with no processing
-             fee on either side. Funds typically settle in 1–3 business days.</p>
-          <dl>
-            <dt>ACCOUNT NAME</dt><dd>[ADD ACCOUNT NAME]</dd>
-            <dt>ACCOUNT NO.</dt><dd>[ADD ACCOUNT NUMBER]</dd>
-            <dt>ROUTING NO.</dt><dd>[ADD ROUTING NUMBER]</dd>
-            <dt>REFERENCE</dt><dd>Your invoice number</dd>
-          </dl>
-        </div>
-        <a class="btn disabled" href="#">Details on invoice</a>
-      </div>
-
-      <div class="method primary">
-        <div>
-          <span class="tag pref">Fastest</span>
           <h2>Pay online — any amount</h2>
-          <p>Card, bank debit (ACH) or digital wallet through Stripe's secure checkout.
-             You choose the amount, so it works for a deposit, a milestone, a full
-             invoice, or credit on account. Add your invoice number at checkout and it
-             gets matched automatically.</p>
+          <p>Card or direct bank debit (ACH) through Stripe's secure checkout. You choose
+             the amount, so the same link works for a deposit, a milestone, a full invoice,
+             or credit on account. Paying by <strong>bank debit costs you nothing</strong>
+             and caps my processing fee at $5 — it's the better choice on anything large.</p>
           <dl>
-            <dt>ACCEPTS</dt><dd>Card · ACH bank debit · Apple&nbsp;Pay · Google&nbsp;Pay</dd>
-            <dt>AMOUNT</dt><dd>You choose at checkout</dd>
+            <dt>ACCEPTS</dt><dd>Card · US&nbsp;bank&nbsp;debit (ACH) · Apple&nbsp;Pay · Cash&nbsp;App&nbsp;Pay</dd>
+            <dt>AMOUNT</dt><dd>You choose — up to $10,000 per payment</dd>
+            <dt>CLEARS</dt><dd>Card instantly · ACH in 3–5 business days</dd>
             <dt>RECEIPT</dt><dd>Emailed automatically</dd>
           </dl>
         </div>
         <a class="btn" id="pay-link"
-           href="https://buy.stripe.com/test_6oU4gA2MW3by0sv45o93y00">Pay now →</a>
+           href="https://buy.stripe.com/bJe28s7ZPh075y9aZW0RG01">Pay now →</a>
+      </div>
+
+      <div class="method">
+        <div>
+          <span class="tag alt">On request</span>
+          <h2>Direct bank transfer</h2>
+          <p>For amounts above the $10,000 checkout limit, or if your finance team prefers
+             to push the payment themselves. Account details are printed on your invoice —
+             email billing if you need them separately.</p>
+          <dl>
+            <dt>REFERENCE</dt><dd>Your invoice number</dd>
+            <dt>SETTLES</dt><dd>1–3 business days</dd>
+          </dl>
+        </div>
+        <a class="btn" href="mailto:billing@nsqrai.com?subject=Bank%20transfer%20details">Request details</a>
       </div>
 
       <div class="method">
@@ -148,12 +149,14 @@ footer a:hover{color:var(--cyan)}
 
     </div>
 
-    <div class="todo">
-      <b>▲ STRIPE TEST MODE</b>
-      <span>Checkout is wired to a Stripe <strong>test</strong> key, so no real money
-      moves yet — use card <code>4242 4242 4242 4242</code>, any future expiry, any CVC.
-      Two things to finish before real invoices: activate the Stripe account and swap in
-      the live key, and add the bank details to the transfer block above.</span>
+    <div class="note">
+      <div class="k">How account credit works</div>
+      <p>Credit is held in dollars, not in points or units — $1 paid is $1 of credit. There's
+         nothing to redeem and nothing that expires.</p>
+      <p>When I invoice you, your balance is applied to that invoice automatically and only
+         the shortfall is payable. Every invoice shows the credit applied and what's left,
+         so the running balance is always on paper. If we part ways with credit unused,
+         it's refunded — it's your money on deposit, not a store voucher.</p>
     </div>
 
     <div class="note">

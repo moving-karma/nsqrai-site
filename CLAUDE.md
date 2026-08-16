@@ -62,15 +62,51 @@ or `info@` go out as `nicolasquirozr@`. Switch to "Reply from the same address" 
 💡 Role addresses must be **aliases or Groups, never extra users** — a user seat is
 $19.80/mo, an alias is free (30 per user).
 
-## Payments — Stripe, TEST mode
-`pay.html` links a Stripe **payment link** with a customer-chosen amount (`custom_unit_amount`,
-min $1, preset $2,500), card + **ACH** (`us_bank_account`), an optional invoice-number custom
-field, and a redirect to `thanks.html`. Keys live in `~/.config/nsqrai/credentials.env`.
-🛑 **Still `sk_test_` — no real money moves.** The account has `charges_enabled: false` /
-`details_submitted: false`. Activate Stripe, then regenerate the product/price/link against
-the live key and swap the URL in `pay.html`. The ACH bank-transfer block still shows
-`[ADD ACCOUNT NUMBER]` placeholders.
-💰 Why ACH matters: on a $20k invoice card costs ~$580, ACH is capped at **$5**.
+## Payments — Stripe, LIVE (2026-08-16)
+**Business model: prepaid account credit in DOLLARS.** $1 paid = $1 of credit — no points, no
+units, no expiry. A client pays any amount, it is held as credit on their Stripe **Customer**,
+and every invoice raised against them draws it down automatically; only the shortfall is due.
+Unused credit is refundable — it is money on deposit, not a voucher.
+
+🛑 **THE ONE MANUAL STEP.** Stripe does *not* convert a payment into customer credit by itself.
+After each deposit lands: Customers → the customer → **Credit balance → Adjust balance** →
+enter the amount as credit. Everything downstream (applying it to invoices, showing the running
+balance on each invoice) is automatic. There is no no-code way to automate that hop; automating
+it needs a webhook + a server, which this site deliberately does not have.
+⏳ **Wait for ACH to clear before crediting** — ACH is a *delayed notification* method, 3–5
+business days. Crediting on `checkout.session.completed` would credit an unsettled payment.
+
+**The live account is `acct_1U2ipzL9gSnQ6vg1`** (name `nsqr-ai`, `nicolasquirozr@nsqrai.com`).
+Activated, `charges_enabled` + `payouts_enabled`, **no open tasks**. Payouts land at
+**Capital One ••••8891**, automatic, **daily**.
+🪤 **`acct_1U2iq6LKpY7xQxAY` is the SANDBOX, a different account id.** Stripe's new sandboxes get
+their own `acct_`, so a mismatch is not a bug — but the `sk_test_`/`pk_test_` keys in
+`credentials.env` belong to the sandbox and can never touch live money. **There is no live key
+stored anywhere, and none is needed** — the payment link was built in the Dashboard.
+
+`pay.html` → **`https://buy.stripe.com/bJe28s7ZPh075y9aZW0RG01`** (`plink_1U5AkHL9gSnQ6vg1Rx3m1Rrx`,
+type *customer chooses what to pay*): preset **$2,500**, min **$1**, max **$10,000**, collects
+full name (required) + business name (optional) + a **"Invoice number (if any)"** optional text
+field, redirects to `https://nsqrai.com/thanks.html`. Not listed on the public Stripe profile.
+Deliberately OFF: *Managed Payments* (adds 3.5%/txn), *Collect tax automatically* (Stripe Tax
+isn't configured; tax belongs on the real invoice, not on a deposit), *post-payment invoice PDF*
+(0.4%, max $2 — Stripe already emails a receipt).
+
+🛑 **TWO HARD CEILINGS on a young account, both real:**
+- **$10,000 per transaction.** Stripe rejects a higher `maximum` outright: *"Your account cannot
+  process values larger than $10,000.00."* Contact Stripe support to raise it once there's
+  processing history. Until then a $20k invoice must be split or wired.
+- **$20,000/week for ACH**, rising with volume. Above it, transactions are **blocked**.
+
+💰 Why ACH matters: on a $20k invoice card costs ~$580, ACH is capped at **$5**. ACH Direct Debit
+was **enabled 2026-08-16** — before that the checkout offered card/wallets only while `pay.html`
+advertised ACH. Live method list: Card · US bank account · Cash App Pay · Klarna · Amazon Pay
+(+ Link, + Apple Pay).
+
+🔒 **Do NOT publish the bank account/routing numbers on `pay.html`.** An account + routing pair on
+a public page is an ACH-debit fraud target, and it buys nothing: Stripe checkout already does ACH
+at the same $5 cap with no exposure. The transfer block says "details on your invoice" on purpose
+— the old `[ADD ACCOUNT NUMBER]` placeholders were removed, not filled in.
 
 ## Squarespace
 Domain registration only — **no website plan, and none needed**. Their 14-day trial site was
