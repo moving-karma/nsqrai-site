@@ -127,7 +127,10 @@ function bankConfig_() {
     routingNumber: (p.getProperty('BANK_ROUTING_NUMBER') || '').trim(),
     accountType:   (p.getProperty('BANK_ACCOUNT_TYPE')   || 'Business Checking').trim(),
     address:       (p.getProperty('BUSINESS_ADDRESS')    || '').trim(),
-    termsDays:     parseInt(p.getProperty('PAYMENT_TERMS_DAYS'), 10) || 14,
+    // NOT `|| 14`: PAYMENT_TERMS_DAYS=0 (due on receipt) is falsy and would
+    // silently become Net 14. Only an absent/unparseable value defaults.
+    termsDays:     (function (v) { return isNaN(v) ? 14 : v; })(
+                     parseInt(p.getProperty('PAYMENT_TERMS_DAYS'), 10)),
     // No BANK_ADDRESS: a domestic ACH or wire to Capital One clears on account
     // holder + ABA + account number. The address that matters is OURS (the
     // beneficiary's), which is BUSINESS_ADDRESS above - matching invoice 009.
@@ -264,12 +267,15 @@ function handleInvoiceRequest_(data) {
     amount: amount,
     // name/company DO appear on the invoice, so they are flattened to a single
     // line and capped - a client cannot smuggle extra "terms" in via newlines.
-    name: clean_(data.name, 80),
+    // The form posts first_name/last_name; `name` is kept as a fallback so an
+    // older cached copy of pay.html still submits successfully.
+    name: clean_(
+      [data.first_name, data.last_name].filter(String).join(' ') || data.name, 80),
     email: data.email,
     company: clean_(data.company, 80),
-    // Prints in the Bill To block, so it keeps its line breaks (rendered with
-    // white-space:pre-line) but is still stripped of control characters.
-    billingAddress: cleanMultiline_(data.billing_address, 300),
+    // Assembled from discrete fields rather than one free-text blob, so it
+    // renders as a real postal address and each part can be reused later.
+    billingAddress: composeAddress_(data),
     // note NEVER reaches the client's invoice. Operator-side only: the sheet
     // and the notification email. See emailInvoice_.
     note: clean_(data.message, 500),
@@ -315,8 +321,8 @@ function emailInvoice_(r, cfg) {
     cfg.ein ? 'EIN ' + cfg.ein : null,
     '',
     'Issued:      ' + fmtDate_(r.issued),
-    'Due:         ' + fmtDate_(r.due),
-    'Terms:       Net ' + cfg.termsDays + ' days',
+    'Due:         ' + dueLabel_(r, cfg),
+    'Terms:       ' + termsLabel_(cfg),
     'Currency:    USD',
     '',
     'BILL TO',
@@ -415,8 +421,8 @@ function invoiceHtml_(r, cfg) {
 
     '<table style="border-collapse:collapse;margin-bottom:10px">',
     row('Issued', fmtDate_(r.issued)),
-    row('Due', fmtDate_(r.due)),
-    row('Terms', 'Net ' + cfg.termsDays + ' days'),
+    row('Due', dueLabel_(r, cfg), cfg.termsDays === 0),
+    row('Terms', termsLabel_(cfg)),
     row('Currency', 'USD'),
     '</table>',
 
@@ -741,6 +747,39 @@ function cleanMultiline_(v, max) {
     .replace(/\n{3,}/g, '\n\n')
     .trim()
     .slice(0, max || 300);
+}
+
+/** Net 0 is "due on receipt", not "Net 0 days" - and not a date either. */
+function termsLabel_(cfg) {
+  return cfg.termsDays === 0 ? 'Due on receipt' : 'Net ' + cfg.termsDays + ' days';
+}
+function dueLabel_(r, cfg) {
+  return cfg.termsDays === 0 ? 'On receipt' : fmtDate_(r.due);
+}
+
+/**
+ * Build a postal address block from the form's discrete fields.
+ * "City, ST 07026" on one line is the US convention; the country line is
+ * dropped when it is the US so domestic invoices do not carry a redundant line.
+ */
+function composeAddress_(data) {
+  var l1      = clean_(data.address_line1, 100);
+  var l2      = clean_(data.address_line2, 100);
+  var city    = clean_(data.city, 60);
+  var state   = clean_(data.state, 40);
+  var zip     = clean_(data.postal_code, 20);
+  var country = clean_(data.country, 60);
+
+  var cityLine = [city, [state, zip].filter(String).join(' ')]
+    .filter(String).join(', ');
+
+  var isUS = /^(us|usa|united states.*)$/i.test(country);
+
+  return [l1, l2, cityLine, isUS ? '' : country]
+    .filter(String)
+    .join('\n')
+    // A pre-structured-fields client may still post the old single textarea.
+    || cleanMultiline_(data.billing_address, 300);
 }
 
 /** Right-pad for the plain-text invoice columns, so they survive a label change. */

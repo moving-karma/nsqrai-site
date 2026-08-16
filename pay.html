@@ -104,6 +104,11 @@ main{padding:72px 0 96px}
 }
 .amount-wrap input{padding-left:28px;font-family:var(--mono);font-size:1.05rem}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.sec-head{
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--cyan);margin:10px 0 -4px;padding-top:14px;border-top:1px solid var(--line);
+}
+.sec-head span{color:var(--dim);text-transform:none;letter-spacing:0;font-size:.72rem}
 .f-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:22px}
 button.btn{border:none;cursor:pointer;font-family:inherit}
 button.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
@@ -204,18 +209,44 @@ footer a:hover{color:var(--cyan)}
           <input id="company" name="company" type="text" autocomplete="organization">
         </div>
         <div>
-          <label for="name">Your name</label>
-          <input id="name" name="name" type="text" autocomplete="name" required>
+          <label for="first_name">First name</label>
+          <input id="first_name" name="first_name" type="text" autocomplete="given-name" required>
         </div>
         <div>
+          <label for="last_name">Last name</label>
+          <input id="last_name" name="last_name" type="text" autocomplete="family-name" required>
+        </div>
+        <div class="full">
           <label for="email">Email for the invoice</label>
           <input id="email" name="email" type="email" autocomplete="email" required>
         </div>
+
+        <div class="full sec-head">Billing address <span>appears on the invoice</span></div>
         <div class="full">
-          <label for="billing_address">Billing address <span style="text-transform:none;letter-spacing:0">(optional — appears on the invoice)</span></label>
-          <textarea id="billing_address" name="billing_address" rows="3"
-                    autocomplete="street-address"
-                    placeholder="100 Outwater Ln, Ste 1A&#10;Garfield, NJ 07026"></textarea>
+          <label for="address_line1">Address line 1</label>
+          <input id="address_line1" name="address_line1" type="text" autocomplete="address-line1"
+                 placeholder="100 Outwater Ln">
+        </div>
+        <div class="full">
+          <label for="address_line2">Address line 2 <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+          <input id="address_line2" name="address_line2" type="text" autocomplete="address-line2"
+                 placeholder="Ste 1A">
+        </div>
+        <div>
+          <label for="city">City</label>
+          <input id="city" name="city" type="text" autocomplete="address-level2" placeholder="Garfield">
+        </div>
+        <div>
+          <label for="state">State / Province</label>
+          <input id="state" name="state" type="text" autocomplete="address-level1" placeholder="NJ">
+        </div>
+        <div>
+          <label for="postal_code">ZIP / Postal code</label>
+          <input id="postal_code" name="postal_code" type="text" autocomplete="postal-code" placeholder="07026">
+        </div>
+        <div>
+          <label for="country">Country</label>
+          <input id="country" name="country" type="text" autocomplete="country-name" value="United States">
         </div>
         <div class="full">
           <label for="message">PO number or note <span style="text-transform:none;letter-spacing:0">(optional — for me, not shown on the invoice)</span></label>
@@ -305,7 +336,8 @@ var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZ
 
     var amount = parseFloat((data.amount || '').replace(/[^0-9.]/g, ''));
     if (!(amount > 0))                     return say('Enter the amount you want to deposit.', 'err');
-    if (!data.name)                        return say('Please add your name.', 'err');
+    if (!data.first_name || !data.last_name)
+                                           return say('Please add your first and last name.', 'err');
     if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(data.email || ''))
                                            return say('That email address doesn’t look right.', 'err');
 
