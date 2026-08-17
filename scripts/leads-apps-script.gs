@@ -4,8 +4,8 @@
  * Two jobs, one web app:
  *   1. LEADS    - contact-form submissions -> "Leads" sheet + email to info@
  *   2. INVOICES - deposit requests from pay.html -> generates an invoice number,
- *                 emails the client a bank-transfer invoice with our details
- *                 filled in, logs it to the "Invoices" sheet, copies billing@.
+ *                 emails the client the invoice as a PDF attachment with our
+ *                 bank details filled in, logs it to "Invoices", copies billing@.
  *
  * Runs entirely inside your own Google Workspace: no API keys, no OAuth, no
  * third-party service, no processing fee on the money.
@@ -731,13 +731,15 @@ function invoiceHtml_(r, cfg) {
   };
 
   return [
+    // Tighter than the cover note on purpose: this renders to PDF, and the
+    // whole document wants to land on ONE page.
     '<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;',
-    'max-width:600px;margin:0 auto;padding:34px 28px;color:#0f172a;line-height:1.6">',
+    'max-width:600px;margin:0 auto;padding:20px 24px;color:#0f172a;line-height:1.5">',
 
     // FROM / remit-to. A bare business name is not enough on a document that
     // carries payment instructions - the payer's finance team needs a postal
     // address to file it, and a wire needs the beneficiary address anyway.
-    '<table style="width:100%;border-collapse:collapse;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:26px">',
+    '<table style="width:100%;border-collapse:collapse;border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:18px">',
     '<tr><td style="padding-bottom:16px;vertical-align:top">',
     '<div style="font-size:19px;font-weight:700;letter-spacing:-.02em">NSQR AI</div>',
     '<div style="font-size:12px;color:#64748b">AI infrastructure design &amp; specification</div>',
@@ -748,7 +750,7 @@ function invoiceHtml_(r, cfg) {
     '</td></tr></table>',
 
     '<div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#0d9488;font-weight:700">Invoice</div>',
-    '<div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin:2px 0 22px">', esc_(r.invoiceNo), '</div>',
+    '<div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin:2px 0 16px">', esc_(r.invoiceNo), '</div>',
 
     '<table style="border-collapse:collapse;margin-bottom:10px">',
     row('Issued', fmtDate_(r.issued)),
@@ -757,7 +759,7 @@ function invoiceHtml_(r, cfg) {
     row('Currency', 'USD'),
     '</table>',
 
-    '<div style="margin-bottom:26px">',
+    '<div style="margin-bottom:18px">',
     '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px">Bill to</div>',
     '<div style="font-size:14px;color:#0f172a;font-weight:600">', esc_(r.company || r.name || r.email), '</div>',
     r.company && r.name ? '<div style="font-size:13px;color:#475569">' + esc_(r.name) + '</div>' : '',
@@ -769,7 +771,7 @@ function invoiceHtml_(r, cfg) {
 
     // The single billable line. Nothing the client typed is priced or
     // described here - only the amount they chose.
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:26px">',
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:18px">',
     '<tr>',
     '<th style="text-align:left;padding:0 0 8px;border-bottom:1px solid #cbd5e1;',
     'font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700">Description</th>',
@@ -793,8 +795,13 @@ function invoiceHtml_(r, cfg) {
     '</tr>',
     '</table>',
 
-    '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:20px 22px;margin-bottom:22px">',
-    '<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#0f766e;font-weight:700;margin-bottom:12px">',
+    // page-break-inside:avoid is LOAD-BEARING, not cosmetic. The first PDF
+    // build split this panel across the page break, stranding the payment
+    // reference on page 2 - on the one block the whole document exists to
+    // convey. Keep it whole even if that pushes it to the next page.
+    '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:16px 20px;',
+    'margin-bottom:18px;page-break-inside:avoid">',
+    '<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#0f766e;font-weight:700;margin-bottom:10px">',
     'Wire / ACH instructions</div>',
     '<table style="border-collapse:collapse">',
     row('Account holder', cfg.accountName),
@@ -815,7 +822,7 @@ function invoiceHtml_(r, cfg) {
     // International is shown ONLY when a SWIFT/BIC is configured. Advertising
     // it without one sends the payer to a bank that will reject the wire.
     cfg.swift
-      ? '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:18px 22px;margin-bottom:22px">' +
+      ? '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin-bottom:18px;page-break-inside:avoid">' +
         '<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px">' +
         'International wire</div>' +
         '<table style="border-collapse:collapse">' +
