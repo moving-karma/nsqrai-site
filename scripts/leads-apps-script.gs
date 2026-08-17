@@ -34,6 +34,9 @@
  *      live in your Google account and are never committed.
  *
  *   4. Run  > START_HERE_buildSheets  once. Approve the permission prompt.
+ *      The client invoice goes out via GmailApp, which needs the Gmail scope -
+ *      so this prompt is REQUIRED, not optional. Until it is approved the web
+ *      app cannot run at all. See emailInvoice_ for why MailApp is not usable.
  *   5. Deploy -> Manage deployments -> edit the live deployment -> Version:
  *      "New version" -> Deploy. (A NEW deployment would change the /exec URL
  *      and break the site. Always edit the existing one.)
@@ -412,22 +415,43 @@ function emailInvoice_(r, cfg) {
   var plain = pdf ? invoiceCoverText_(r, cfg) : invoiceFullText_(r, cfg);
   var html  = pdf ? invoiceCoverHtml_(r, cfg) : invoiceHtml_(r, cfg);
 
-  // MailApp, deliberately not GmailApp. Sending *as* the billing@ alias needs
-  // GmailApp, which pulls in a wider OAuth scope - and a scope change forces
-  // re-authorisation that would take the live contact form down until it is
-  // clicked through. Display name + reply-to get the same result for free.
-  var msg = {
-    to: r.email,
-    subject: subject,
-    body: plain,
+  // ------------------------------------------------------------------------
+  // GmailApp, NOT MailApp. This is the whole reason invoices were not arriving.
+  //
+  // MailApp does not send through this mailbox - it relays through Apps
+  // Script's own mailer (the headers show Message-ID <autogen-java-...@
+  // google.com>, not @nsqrai.com), and Google DISCARDS flagged relay mail with
+  // no bounce and no error. That is exactly the signature we chased: accepted,
+  // bcc delivered in 0 s, nothing at the recipient, no NDR.
+  //
+  // Measured 2026-08-17 by bisect: FIVE MailApp variants to an external Gmail
+  // all vanished - including variant A, a bare to/subject/body with no display
+  // name, no reply-to, no bcc and no attachment. The same one-line text sent by
+  // hand from the Gmail compose window ten minutes earlier ARRIVED. So it was
+  // never the content, the alias, the HTML or the PDF. It was the relay.
+  //
+  // GmailApp sends through the mailbox itself - the path that demonstrably
+  // works - and can send as a verified alias for real, instead of faking it
+  // with a display name. It costs a wider OAuth scope. That is the price of
+  // the invoice actually arriving, and it is worth it.
+  // ------------------------------------------------------------------------
+  var opts = {
     htmlBody: html,
     name: 'NSQR AI Billing',
     replyTo: BILLING_FROM,
     bcc: BILLING_FROM,
   };
-  if (pdf) msg.attachments = [pdf];
+  if (pdf) opts.attachments = [pdf];
 
-  MailApp.sendEmail(msg);
+  // Only claim the alias if Gmail actually knows it. An unverified from address
+  // makes GmailApp throw, which would lose the invoice entirely.
+  try {
+    if (GmailApp.getAliases().indexOf(BILLING_FROM) !== -1) opts.from = BILLING_FROM;
+  } catch (err) {
+    console.error('alias lookup failed, sending as the default address: ' + err);
+  }
+
+  GmailApp.sendEmail(r.email, subject, plain, opts);
 
   if (!pdf) {
     MailApp.sendEmail({

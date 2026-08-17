@@ -141,23 +141,42 @@ external send this system ever made, and it is the only one that was a real deli
   it to `info@`. Issues no invoice number, writes no row. Run it after any template edit —
   the HTML-to-PDF renderer is basic and layout regressions are invisible until you look.
 
-🛑 **THE PDF FIX DID NOT RESTORE DELIVERY — do not assume it did.** `NSQR-2026-0004` was sent
-through the **live site** at 01:46 ET on 2026-08-17 with the PDF attached and a clean cover body,
-to the same `nicolasdtephanoq@gmail.com`. Identical outcome to 0003: accepted, `bcc` delivered
-instantly, **no bounce, never arrived**. ⇒ **content was not the blocker, or not the only one** —
-two structurally very different messages vanished the same way to the same recipient.
-**Ruled out by measurement that night**, so do not re-test these: a typo in the address (that IS
-the account) · the recipient's Spam/Trash/Archive (`in:anywhere` covers all three) · a Gmail
-**filter** (the account has **zero** filters) · a **blocked sender** (50-entry block list, no
-`nsqrai.com`) · our code (`doPost` Completed, DKIM `d=nsqrai.com`, bcc leg 0 s).
-**What is left:** sender reputation, or a Workspace-side outbound quarantine. The authoritative
-read is **Admin console → Reporting → Email Log Search** (+ Admin → Quarantine); it demands a
-password re-auth, so **only the operator can run it.**
-💡 **Cheapest next discriminator:** send to one **non-Gmail** external address. If that lands, the
-problem is the nsqrai.com → consumer-Gmail path specifically, not the domain's ability to send.
-⚠️ The domain is young and this is reputation-shaped. The structural fix is letting **QuickBooks**
-send invoices (Intuit's IPs, established reputation) — still blocked on `QBO_CLIENT_ID` /
-`QBO_CLIENT_SECRET`.
+## 🛑 SOLVED 2026-08-17 — `MailApp` NEVER DELIVERED EXTERNALLY. USE `GmailApp`.
+**Root cause: `MailApp` does not send through this mailbox.** It relays through Apps Script's own
+mailer — the headers show `Message-ID: <autogen-java-…@google.com>`, not `@nsqrai.com` — and Google
+**silently discards** flagged relay mail, with no bounce and no error. Every symptom followed from
+that: accepted, `bcc` delivered in 0 s, nothing at the recipient, no NDR.
+🪤 **Invoices 0001/0002 "worked" only because they went to `nicolasquirozr@nsqrai.com`** — internal
+Workspace delivery, which never touches the public internet. **0003 and 0004 were the first two
+external sends this script ever attempted, and both vanished.** Nothing regressed; external
+sending was never demonstrated to work at all.
+
+**How it was proven** (do not re-litigate — this was measured, not inferred):
+- The same one-line text sent by hand from the **Gmail compose window** → **delivered**.
+- A 5-variant `MailApp` bisect to the same address → **all 5 dropped**, including variant A: a bare
+  `to`/`subject`/`body` with no display name, no reply-to, no bcc, no attachment. ⇒ it was never
+  the content, the alias, the HTML or the PDF.
+- The exact exception, once the probe surfaced it:
+  `The script does not have permission to perform that action. Required permissions:
+  (https://mail.google.com/ || …/auth/gmail.send || …)`.
+- After granting the scope, `GmailApp` probes (bare / from-alias / with-PDF) → **all 3 delivered**,
+  and the live-site invoice **`NSQR-2026-0006` landed in the Primary inbox with the PDF attached**.
+
+🪤 **The manifest had NO `oauthScopes`, so Apps Script never prompted** — `GmailApp` just threw at
+the call site and `doPost`'s catch turned it into "Something went wrong." The fix is
+[`scripts/appsscript.json`](./scripts/appsscript.json), which now declares them explicitly:
+`spreadsheets` · `script.send_mail` · **`gmail.send`** · **`gmail.settings.basic`**.
+Turn the manifest on with Project Settings → *Show "appsscript.json" manifest file in editor*.
+⚠️ **A scope change needs one operator click** (Run → Review permissions → Allow). Until it is
+granted the web app cannot send, so **never deploy a scope change before authorising it**.
+✅ `billing@nsqrai.com` **is** a verified send-as alias (`GmailApp.getAliases()` returns it), so the
+invoice now genuinely sends **from** `billing@`, not just with a display name.
+
+⚠️ **Ruled out by measurement, do not re-test:** a typo in the address · the recipient's
+Spam/Trash/Archive (`in:anywhere`) · a Gmail **filter** (the account has zero) · a **blocked
+sender** · DKIM/SPF (signed `d=nsqrai.com` throughout) · content/BEC filtering.
+📌 The PDF split is still worth keeping — it is how an invoice should look — but it was **not** the
+deliverability fix, and it was shipped on a theory that turned out to be wrong.
 ⚠️ **Open, unfixed:** the site says *"Invoice … is on its way to your inbox"* and the sheet logs
 **Sent** on an *unverified* send. 0003 was a silent failure — no delivery, no bounce, no signal.
 
