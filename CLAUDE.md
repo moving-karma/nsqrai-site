@@ -141,9 +141,23 @@ external send this system ever made, and it is the only one that was a real deli
   it to `info@`. Issues no invoice number, writes no row. Run it after any template edit —
   the HTML-to-PDF renderer is basic and layout regressions are invisible until you look.
 
-⚠️ **This does not make delivery certain, it removes the worst signal.** The domain is still young.
-The structural fix is letting **QuickBooks** send invoices (Intuit's IPs, established reputation) —
-still blocked on `QBO_CLIENT_ID` / `QBO_CLIENT_SECRET`.
+🛑 **THE PDF FIX DID NOT RESTORE DELIVERY — do not assume it did.** `NSQR-2026-0004` was sent
+through the **live site** at 01:46 ET on 2026-08-17 with the PDF attached and a clean cover body,
+to the same `nicolasdtephanoq@gmail.com`. Identical outcome to 0003: accepted, `bcc` delivered
+instantly, **no bounce, never arrived**. ⇒ **content was not the blocker, or not the only one** —
+two structurally very different messages vanished the same way to the same recipient.
+**Ruled out by measurement that night**, so do not re-test these: a typo in the address (that IS
+the account) · the recipient's Spam/Trash/Archive (`in:anywhere` covers all three) · a Gmail
+**filter** (the account has **zero** filters) · a **blocked sender** (50-entry block list, no
+`nsqrai.com`) · our code (`doPost` Completed, DKIM `d=nsqrai.com`, bcc leg 0 s).
+**What is left:** sender reputation, or a Workspace-side outbound quarantine. The authoritative
+read is **Admin console → Reporting → Email Log Search** (+ Admin → Quarantine); it demands a
+password re-auth, so **only the operator can run it.**
+💡 **Cheapest next discriminator:** send to one **non-Gmail** external address. If that lands, the
+problem is the nsqrai.com → consumer-Gmail path specifically, not the domain's ability to send.
+⚠️ The domain is young and this is reputation-shaped. The structural fix is letting **QuickBooks**
+send invoices (Intuit's IPs, established reputation) — still blocked on `QBO_CLIENT_ID` /
+`QBO_CLIENT_SECRET`.
 ⚠️ **Open, unfixed:** the site says *"Invoice … is on its way to your inbox"* and the sheet logs
 **Sent** on an *unverified* send. 0003 was a silent failure — no delivery, no bounce, no signal.
 
