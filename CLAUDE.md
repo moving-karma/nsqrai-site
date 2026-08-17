@@ -112,9 +112,40 @@ filled in.
 **The main path for anything sizeable. Stripe is the card/convenience option; this is the one that
 costs nothing.** `pay.html` carries a deposit form (amount + name + email + company + note). It
 POSTs `action=invoice` to the same Apps Script web app as the contact form, which issues
-`NSQR-<year>-<seq>`, emails the client an HTML invoice carrying our bank details and that number
-as the payment reference, logs a row to a new **`Invoices`** tab, and copies `billing@`.
-Client pays from their own bank. Set the row to **Paid** when it lands; `Paid On` self-stamps.
+`NSQR-<year>-<seq>`, emails the client the invoice **as a PDF attachment** carrying our bank
+details and that number as the payment reference, logs a row to a new **`Invoices`** tab, and
+copies `billing@`. Client pays from their own bank. Set the row to **Paid** when it lands;
+`Paid On` self-stamps.
+
+🛑 **THE BANK BLOCK GOES ON THE ATTACHED PDF, NEVER IN THE MESSAGE BODY (2026-08-17).**
+An account number + routing number + "TOTAL DUE" *in the body* of a mail from a domain with no
+sending reputation is the exact fingerprint of a business email compromise attack, and the body is
+what inbound filters read hardest. **`NSQR-2026-0003` proved it:** sent 01:12 ET, DKIM-signed
+`d=nsqrai.com`, `bcc` leg to `billing@` delivered in **0 seconds** — and it never reached the
+recipient's Gmail (checked `in:anywhere`, so Spam/Trash/Archive included) and **never bounced**.
+Apps Script logged `doPost` … **Completed** in 1.835 s, so nothing on our side failed.
+🪤 **`0001` and `0002` "worked" only because they went to `nicolasquirozr@nsqrai.com`** — internal
+Workspace delivery, which never touches the public internet or spam filtering. **0003 was the first
+external send this system ever made, and it is the only one that was a real deliverability test.**
+∴ never read an internal-recipient test as proof that invoicing works.
+- `invoiceHtml_` = the **full** invoice, bank block included → rendered to the PDF by
+  `invoicePdfBlob_` via `Utilities.newBlob(html, MimeType.HTML).getAs(MimeType.PDF)` (needs **no
+  new OAuth scope** — `Utilities` requires none, so this does not force a re-authorisation).
+- `invoiceCoverHtml_` / `invoiceCoverText_` = the **email body**. Amount, due date, reference,
+  "the invoice is attached". **Zero bank fields** — asserted by grepping `cfg.accountNumber` /
+  `cfg.routingNumber` out of both.
+- **Fallback:** if the PDF cannot be built, it sends the old inline-details invoice
+  (`invoiceFullText_` / `invoiceHtml_`) so the client can still pay, and mails `info@` a
+  **"went out WITHOUT the PDF"** warning. Never a cover note pointing at a missing attachment.
+- **`PREVIEW_invoicePdf`** builds a sample PDF from the live template + live bank details and mails
+  it to `info@`. Issues no invoice number, writes no row. Run it after any template edit —
+  the HTML-to-PDF renderer is basic and layout regressions are invisible until you look.
+
+⚠️ **This does not make delivery certain, it removes the worst signal.** The domain is still young.
+The structural fix is letting **QuickBooks** send invoices (Intuit's IPs, established reputation) —
+still blocked on `QBO_CLIENT_ID` / `QBO_CLIENT_SECRET`.
+⚠️ **Open, unfixed:** the site says *"Invoice … is on its way to your inbox"* and the sheet logs
+**Sent** on an *unverified* send. 0003 was a silent failure — no delivery, no bounce, no signal.
 
 🛑 **THE BANK DETAILS LIVE IN SCRIPT PROPERTIES, NEVER IN THE REPO.**
 `moving-karma/nsqrai-site` is **PUBLIC on GitHub** — anything hardcoded in

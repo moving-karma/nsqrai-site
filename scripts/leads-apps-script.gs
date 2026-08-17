@@ -42,9 +42,13 @@
  * HOW THE DEPOSIT FLOW WORKS
  * ============================================================================
  *   Client fills the deposit form on nsqrai.com/pay.html with an amount and
- *   their details -> this script issues NSQR-<year>-<seq>, emails them an
- *   invoice carrying our bank details and that number as the payment
- *   reference, and logs a row to "Invoices" with Status = Sent.
+ *   their details -> this script issues NSQR-<year>-<seq>, emails them the
+ *   invoice as a PDF ATTACHMENT carrying our bank details and that number as
+ *   the payment reference, and logs a row to "Invoices" with Status = Sent.
+ *
+ *   The email BODY is a cover note only - amount, due date, reference, and a
+ *   pointer to the attachment. It carries no account or routing number. That
+ *   split is a deliverability fix, not cosmetics: see emailInvoice_.
  *
  *   When the money lands in the bank, set Status to Paid on that row. "Paid On"
  *   stamps itself. That sheet is the ledger of what is owed and what has
@@ -98,6 +102,62 @@ function CHECK_bankDetails() {
       ? 'READY - deposit invoices will send.'
       : 'NOT READY - fill the MISSING keys in Project Settings > Script Properties.',
   ].join('\n'));
+}
+
+/**
+ * Builds a SAMPLE invoice PDF and emails it to info@, so you can see exactly
+ * what a client receives BEFORE a real invoice goes out. Mints no invoice
+ * number, writes no sheet row, touches no client.
+ *
+ * The bank block on the sample is the REAL one from Script Properties, which is
+ * the point - it confirms the details survive the HTML-to-PDF conversion. The
+ * body of the preview mail also prints the cover note, so you can check by eye
+ * that no account or routing number is in it.
+ *
+ * NOTE: deliberately NOT the first function in the file. START_HERE_buildSheets
+ * has to keep that slot - the Run selector defaults to whatever is first.
+ */
+function PREVIEW_invoicePdf() {
+  var cfg = bankConfig_();
+  if (!cfg.complete) {
+    Logger.log('Bank details are not configured. Run CHECK_bankDetails first.');
+    return;
+  }
+
+  var issued = new Date();
+  var sample = {
+    invoiceNo: 'NSQR-SAMPLE-0000',
+    issued: issued,
+    due: new Date(issued.getTime() + cfg.termsDays * 86400000),
+    amount: 2500,
+    name: 'Sample Client',
+    email: NOTIFY_TO,
+    company: 'Sample Company Inc',
+    billingAddress: '100 Example Street, Suite 4\nNewark, NJ 07102',
+    note: '',
+    source: 'preview',
+  };
+
+  MailApp.sendEmail({
+    to: NOTIFY_TO,
+    subject: 'PREVIEW - what a deposit invoice looks like',
+    name: 'NSQR AI Billing',
+    attachments: [invoicePdfBlob_(sample, cfg)],
+    body: [
+      'Attached is a SAMPLE invoice PDF, built from the live template and the',
+      'live bank details. No invoice number was issued, nothing was logged.',
+      '',
+      'Check: the PDF opens, the bank block is correct and readable, and the',
+      'layout has not collapsed in conversion.',
+      '',
+      'Below is the cover note a client sees in the message body. Confirm it',
+      'carries NO account number and NO routing number.',
+      '',
+      '---------------------------------------------------------------',
+      invoiceCoverText_(sample, cfg),
+    ].join('\n'),
+  });
+  Logger.log('Sample invoice PDF sent to ' + NOTIFY_TO);
 }
 
 // ---------------------------------------------------------------- config
@@ -326,7 +386,155 @@ function claimInvoiceNumber_() {
 function emailInvoice_(r, cfg) {
   var subject = 'Invoice ' + r.invoiceNo + ' from NSQR AI - ' + money_(r.amount);
 
-  var plain = [
+  // ------------------------------------------------------------------------
+  // The bank block goes on the ATTACHED PDF, never in the message body.
+  //
+  // An account number + routing number + "TOTAL DUE" in the BODY of a mail from
+  // a domain with no sending reputation is the exact shape of a business email
+  // compromise attack, and the body is what inbound filters read hardest. The
+  // first invoice this system ever sent to an external address
+  // (NSQR-2026-0003, 2026-08-17 01:12 ET) was accepted by Google, DKIM-signed,
+  // delivered to the billing@ bcc in 0 seconds - and never arrived at the
+  // recipient, with no bounce. 0001 and 0002 "worked" only because they went to
+  // nicolasquirozr@nsqrai.com, which is internal Workspace delivery and never
+  // touches spam filtering at all.
+  // ------------------------------------------------------------------------
+  var pdf = null;
+  try {
+    pdf = invoicePdfBlob_(r, cfg);
+  } catch (err) {
+    // Never mail a cover note pointing at an attachment that is not there. If
+    // the PDF cannot be built, fall back to the old inline-details invoice so
+    // the client still receives something payable, and flag it to the operator.
+    console.error('PDF build failed for ' + r.invoiceNo + ': ' + err);
+  }
+
+  var plain = pdf ? invoiceCoverText_(r, cfg) : invoiceFullText_(r, cfg);
+  var html  = pdf ? invoiceCoverHtml_(r, cfg) : invoiceHtml_(r, cfg);
+
+  // MailApp, deliberately not GmailApp. Sending *as* the billing@ alias needs
+  // GmailApp, which pulls in a wider OAuth scope - and a scope change forces
+  // re-authorisation that would take the live contact form down until it is
+  // clicked through. Display name + reply-to get the same result for free.
+  var msg = {
+    to: r.email,
+    subject: subject,
+    body: plain,
+    htmlBody: html,
+    name: 'NSQR AI Billing',
+    replyTo: BILLING_FROM,
+    bcc: BILLING_FROM,
+  };
+  if (pdf) msg.attachments = [pdf];
+
+  MailApp.sendEmail(msg);
+
+  if (!pdf) {
+    MailApp.sendEmail({
+      to: NOTIFY_TO,
+      subject: 'HEADS UP - ' + r.invoiceNo + ' went out WITHOUT the PDF',
+      body: [
+        'The PDF could not be built, so ' + r.invoiceNo + ' was sent with the',
+        'bank details inline in the message body instead.',
+        '',
+        'The client can still pay it - but inline bank details are exactly what',
+        'gets a young sending domain filtered, so confirm they actually got it.',
+        '',
+        'Client: ' + r.email,
+        'Amount: ' + money_(r.amount),
+      ].join('\n'),
+    });
+  }
+}
+
+/**
+ * The invoice as a PDF. This is the document that carries the payment details.
+ * Rendered from the same invoiceHtml_ the email used to inline, wrapped in a
+ * real HTML document because the converter needs <html>/<head> to set page
+ * margins and the charset.
+ */
+function invoicePdfBlob_(r, cfg) {
+  var doc = [
+    '<!DOCTYPE html><html><head><meta charset="utf-8">',
+    '<title>', esc_(r.invoiceNo), '</title>',
+    '<style>@page{margin:0.55in}body{margin:0}</style>',
+    '</head><body>',
+    invoiceHtml_(r, cfg),
+    '</body></html>',
+  ].join('');
+
+  return Utilities
+    .newBlob(doc, MimeType.HTML, r.invoiceNo + '.html')
+    .getAs(MimeType.PDF)
+    .setName(r.invoiceNo + '.pdf');
+}
+
+/**
+ * Plain-text cover note. Summarises the invoice and points at the PDF.
+ * Carries NO account number and NO routing number - that is the whole point.
+ */
+function invoiceCoverText_(r, cfg) {
+  return [
+    'Invoice ' + r.invoiceNo,
+    '',
+    'NSQR AI - AI infrastructure design & specification',
+    cfg.address || null,
+    'billing@nsqrai.com' + (cfg.phone ? '  ' + cfg.phone : ''),
+    cfg.ein ? 'EIN ' + cfg.ein : null,
+    '',
+    'Issued:      ' + fmtDate_(r.issued),
+    'Due:         ' + dueLabel_(r, cfg),
+    'Terms:       ' + termsLabel_(cfg),
+    'Currency:    USD',
+    '',
+    'BILL TO',
+    r.company || r.name,
+    (r.company && r.name) ? r.name : null,
+    r.billingAddress || null,
+    r.email,
+    '',
+    pad_('DESCRIPTION', 46) + 'AMOUNT',
+    pad_(CREDIT_LABEL, 46) + money_(r.amount),
+    '  ' + CREDIT_DESC,
+    '',
+    pad_('TOTAL DUE', 46) + money_(r.amount),
+    '',
+    'HOW TO PAY',
+    '  The invoice is attached to this email as a PDF. It carries the account',
+    '  details for payment by ACH or by domestic wire.',
+    '',
+    '  REFERENCE:  ' + r.invoiceNo + '   <- put this on the payment',
+    '',
+    '  The reference is how the payment gets matched to you; without it,',
+    '  reconciliation is manual and slower.',
+    '',
+    cfg.swift
+      ? 'Paying from outside the US? The SWIFT / BIC details are on the PDF too.'
+      : 'Paying from outside the US? Email billing@nsqrai.com for international',
+    cfg.swift ? null : 'wire instructions before sending.',
+    '',
+    r.amount <= CARD_LIMIT
+      ? 'Prefer to pay by card? ' + STRIPE_LINK + ' (a processing fee applies)'
+      : 'This amount is above the card limit, so bank transfer is the way to pay it.',
+    '',
+    'This deposit is held as credit on your account and drawn down by the work',
+    'invoiced against it. Unused credit is refundable.',
+    '',
+    'Questions: billing@nsqrai.com',
+    cfg.address ? 'NSQR AI, ' + cfg.address : 'NSQR AI',
+  // null means "field not configured, drop the line"; '' means "paragraph
+  // break, keep it". An earlier version filtered on '' and collapsed the whole
+  // invoice into a single unreadable block.
+  ].filter(function (l) { return l !== null; }).join('\n');
+}
+
+/**
+ * The old full plain-text invoice, bank details and all. Only reached on the
+ * PDF-build fallback path - a client with no attachment still needs to be able
+ * to pay.
+ */
+function invoiceFullText_(r, cfg) {
+  return [
     'Invoice ' + r.invoiceNo,
     '',
     'NSQR AI - AI infrastructure design & specification',
@@ -385,24 +593,133 @@ function emailInvoice_(r, cfg) {
   // break, keep it". An earlier version filtered on '' and collapsed the whole
   // invoice into a single unreadable block.
   ].filter(function (l) { return l !== null; }).join('\n');
-
-  var html = invoiceHtml_(r, cfg);
-
-  // MailApp, deliberately not GmailApp. Sending *as* the billing@ alias needs
-  // GmailApp, which pulls in a wider OAuth scope - and a scope change forces
-  // re-authorisation that would take the live contact form down until it is
-  // clicked through. Display name + reply-to get the same result for free.
-  MailApp.sendEmail({
-    to: r.email,
-    subject: subject,
-    body: plain,
-    htmlBody: html,
-    name: 'NSQR AI Billing',
-    replyTo: BILLING_FROM,
-    bcc: BILLING_FROM,
-  });
 }
 
+/**
+ * HTML cover note - the body of the email. A readable summary of what is owed,
+ * with the payment details deliberately left OUT and pointed at the attachment.
+ * The full document, bank block included, is invoiceHtml_ below, which is what
+ * gets rendered to the attached PDF.
+ */
+function invoiceCoverHtml_(r, cfg) {
+  var row = function (k, v, strong) {
+    return '<tr>' +
+      '<td style="padding:7px 18px 7px 0;color:#64748b;font-size:13px;white-space:nowrap">' + esc_(k) + '</td>' +
+      '<td style="padding:7px 0;color:#0f172a;font-size:14px;' +
+        (strong ? 'font-weight:700;' : '') +
+        'font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">' + esc_(v) + '</td>' +
+      '</tr>';
+  };
+
+  return [
+    '<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;',
+    'max-width:600px;margin:0 auto;padding:34px 28px;color:#0f172a;line-height:1.6">',
+
+    '<table style="width:100%;border-collapse:collapse;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:26px">',
+    '<tr><td style="padding-bottom:16px;vertical-align:top">',
+    '<div style="font-size:19px;font-weight:700;letter-spacing:-.02em">NSQR AI</div>',
+    '<div style="font-size:12px;color:#64748b">AI infrastructure design &amp; specification</div>',
+    cfg.address ? '<div style="font-size:12px;color:#64748b;margin-top:6px">' + esc_(cfg.address) + '</div>' : '',
+    '<div style="font-size:12px;color:#64748b">billing@nsqrai.com',
+    cfg.phone ? ' &middot; ' + esc_(cfg.phone) : '', '</div>',
+    cfg.ein ? '<div style="font-size:12px;color:#64748b">EIN ' + esc_(cfg.ein) + '</div>' : '',
+    '</td></tr></table>',
+
+    '<div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#0d9488;font-weight:700">Invoice</div>',
+    '<div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin:2px 0 22px">', esc_(r.invoiceNo), '</div>',
+
+    '<table style="border-collapse:collapse;margin-bottom:10px">',
+    row('Issued', fmtDate_(r.issued)),
+    row('Due', dueLabel_(r, cfg), cfg.termsDays === 0),
+    row('Terms', termsLabel_(cfg)),
+    row('Currency', 'USD'),
+    '</table>',
+
+    '<div style="margin-bottom:26px">',
+    '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px">Bill to</div>',
+    '<div style="font-size:14px;color:#0f172a;font-weight:600">', esc_(r.company || r.name || r.email), '</div>',
+    r.company && r.name ? '<div style="font-size:13px;color:#475569">' + esc_(r.name) + '</div>' : '',
+    r.billingAddress
+      ? '<div style="font-size:13px;color:#475569;white-space:pre-line">' + esc_(r.billingAddress) + '</div>'
+      : '',
+    '<div style="font-size:13px;color:#475569">', esc_(r.email), '</div>',
+    '</div>',
+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:26px">',
+    '<tr>',
+    '<th style="text-align:left;padding:0 0 8px;border-bottom:1px solid #cbd5e1;',
+    'font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700">Description</th>',
+    '<th style="text-align:right;padding:0 0 8px;border-bottom:1px solid #cbd5e1;',
+    'font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700">Amount</th>',
+    '</tr>',
+    '<tr>',
+    '<td style="padding:16px 16px 16px 0;border-bottom:1px solid #e2e8f0;vertical-align:top">',
+    '<div style="font-size:15px;font-weight:600;color:#0f172a">', esc_(CREDIT_LABEL), '</div>',
+    '<div style="font-size:13px;color:#64748b;margin-top:3px">', esc_(CREDIT_DESC), '</div>',
+    '</td>',
+    '<td style="padding:16px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top;',
+    'font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;color:#0f172a">',
+    esc_(money_(r.amount)), '</td>',
+    '</tr>',
+    '<tr>',
+    '<td style="padding:14px 16px 0 0;text-align:right;font-size:13px;letter-spacing:.1em;',
+    'text-transform:uppercase;color:#64748b;font-weight:700">Total due</td>',
+    '<td style="padding:14px 0 0;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;',
+    'font-size:22px;font-weight:700;color:#0f172a">', esc_(money_(r.amount)), '</td>',
+    '</tr>',
+    '</table>',
+
+    // Where the bank block used to be. The reference IS safe to state here -
+    // it is our own invoice number, not an account credential.
+    '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:20px 22px;margin-bottom:22px">',
+    '<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#0f766e;font-weight:700;margin-bottom:10px">',
+    'How to pay</div>',
+    '<div style="font-size:14px;color:#0f172a;margin-bottom:12px">',
+    'The invoice is <strong>attached to this email as a PDF</strong>. It carries the account ',
+    'details for payment by ACH or by domestic wire.',
+    '</div>',
+    '<table style="border-collapse:collapse">',
+    row('Reference', r.invoiceNo, true),
+    '</table>',
+    '<div style="font-size:13px;color:#0f766e;margin-top:12px">',
+    'Put <strong>', esc_(r.invoiceNo), '</strong> in the payment reference &mdash; that is how it gets matched to you.',
+    '</div>',
+    '</div>',
+
+    cfg.swift
+      ? '<div style="font-size:13px;color:#475569;margin-bottom:22px">Paying from outside the US? ' +
+        'The SWIFT / BIC details are on the attached PDF as well.</div>'
+      : '<div style="font-size:13px;color:#475569;margin-bottom:22px">Paying from outside the US? ' +
+        'Email <a href="mailto:billing@nsqrai.com" style="color:#0d9488">billing@nsqrai.com</a> ' +
+        'for international wire instructions before sending.</div>',
+
+    r.amount <= CARD_LIMIT
+      ? '<div style="font-size:13px;color:#475569;margin-bottom:22px">Prefer to pay by card? ' +
+        '<a href="' + STRIPE_LINK + '" style="color:#0d9488">Pay online instead</a>' +
+        ' &mdash; a card processing fee applies, which is why bank transfer is preferred.</div>'
+      : '<div style="font-size:13px;color:#475569;margin-bottom:22px">This amount is above the online card limit, ' +
+        'so bank transfer is the way to settle it.</div>',
+
+    // r.note is DELIBERATELY absent here too - same reason as on the invoice.
+
+    '<div style="font-size:13px;color:#475569;border-top:1px solid #e2e8f0;padding-top:18px">',
+    'This deposit is held as <strong>credit on your account</strong> and drawn down by the work invoiced ',
+    'against it. Every invoice shows the credit applied and what is left. Unused credit is refundable.',
+    '</div>',
+
+    '<div style="font-size:12px;color:#94a3b8;margin-top:24px">',
+    'Questions about this invoice: <a href="mailto:billing@nsqrai.com" style="color:#0d9488">billing@nsqrai.com</a><br>',
+    cfg.address ? 'NSQR AI &middot; ' + esc_(cfg.address) : 'NSQR AI',
+    '</div>',
+
+    '</div>',
+  ].join('');
+}
+
+/**
+ * The FULL invoice, bank block included. This is rendered to the attached PDF.
+ * It is also the fallback email body if the PDF cannot be built.
+ */
 function invoiceHtml_(r, cfg) {
   var row = function (k, v, strong) {
     return '<tr>' +
