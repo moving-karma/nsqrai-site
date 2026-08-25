@@ -40,7 +40,7 @@ past employers, the upstation.io connection). The operator explicitly asked for 
 left out. Credibility is carried by technical specificity in the copy instead.
 
 ## Stack — deliberately minimal
-- **`index.html` is the entire site.** Single file, ~52 KB, **zero external requests**
+- **`index.html` is the entire site.** Single file, ~49 KB, **zero external requests**
   (no fonts, CDNs, images, or analytics). No build step, no framework, no dependencies.
 - Hosting: **GitHub Pages** from `main` at repo root — `moving-karma/nsqrai-site` (public).
   Any push to `main` republishes. Build takes ~40 s.
@@ -263,22 +263,38 @@ states only. Monospace for anything that is a technical value; system sans for p
 Respect `prefers-reduced-motion` — the whole scroll rig collapses to a plain stacked
 document (verified: 6,983 px tall, no overflow, all nine stack layers visible).
 
-Four sticky scroll scenes, in order:
-1. **Approach** — portal + `Get online. / Stay online.` + a capability chip rail.
-2. **Corridor** — 3D flythrough of two receding walls of network cabinets.
-3. **Stack** — inline SVG that assembles **bottom-up, L1→L9**: internet circuit → firewall
-   → switch → Wi-Fi → server/NAS → workstations → cloud & email → backup → website.
-   Colour-coded cyan (network) / neutral (compute) / violet (cloud) / bright cyan (the
-   public site). Counters animate `0/9 → 9/9` and `0 → 15 min`.
-4. **Systems** — three pillars: **Presence** (browser mockup w/ scan line), **Connectivity**
-   (node graph), **Continuity** (shield + verification rings).
+Page order — **only two sticky scroll scenes**, everything else is a normal section:
+1. `#s-approach` (**scene**, 240vh) — portal + `Get online. / Stay online.` + chip rail.
+2. `#symptoms` — the **diagnostics band**: six "sound familiar?" symptoms, each an amber
+   (or red, `nth-child(3n)`) status dot + the real diagnosis in mono. Dot goes cyan on
+   hover. This is the highest-converting block on the page for the SMB audience.
+3. `#s-rack` (**scene**, 300vh) — inline SVG that assembles **bottom-up, L1→L9**: internet
+   circuit → firewall → switch → Wi-Fi → server/NAS → workstations → cloud & email →
+   backup → website. Colour-coded cyan (network) / neutral (compute) / violet (cloud) /
+   bright cyan (the public site). Counters animate `0/9 → 9/9` and `0 → 15 min`, complete
+   by 65% of the scene.
+4. `#systems` — the three pillars **side by side in one row**: **Presence** (browser mockup
+   w/ scan line), **Connectivity** (node graph), **Continuity** (shield + rings). All three
+   SVGs share a `460×130` viewBox so the row sits level — the fabric graph gets
+   `viewBox="0 -10 460 130"` to centre its shorter content. Then services, process, about,
+   contact.
 
-🪤 **`.rk` transform ORDER is load-bearing (fixed 2026-08-24).** The corridor walls were
-written `translateX() rotateY() translateZ()`, which applies `translateZ` in the
-*already-rotated* frame — every cabinet slid ~sin(68°)·z sideways off-screen and the scene
-rendered as an empty black tunnel at every viewport width. Correct order is **position
-first, rotate in place last**: `translateX() translateZ() rotateY()`. Corridor half-width
-is `--cw` on `.corridor` so it scales with the viewport.
+🪤 **Two things were CUT on 2026-08-24 (second pass) — do not reinstate:**
+- **The corridor scene.** A 400vh 3D flythrough of two walls of network cabinets. The
+  operator's verdict: *"too long for nothing, it's literally us going into a tunnel."* It
+  also depicted a datacenter aisle, i.e. the retired GPU positioning. `#symptoms` took its
+  slot and does real work in one screen. (Its `.rk` panels also had a transform-order bug —
+  `translateX rotateY translateZ` applies the Z-translate in the already-rotated frame, so
+  every cabinet slid ~sin(68°)·z off-screen. Fixed, then deleted. Noted only so nobody
+  "rediscovers" it.)
+- **The three-swap systems scene.** Presence/Connectivity/Continuity were sticky layers
+  swapping over 360vh behind a progress rail, so seeing all three cost three scroll pushes
+  and you could never compare them. Now one row, one beat.
+
+📉 Net effect: the page went **14,868 px → 10,142 px** at 1280×800 (−32%), and 7,182 px
+under `prefers-reduced-motion`. Scene scroll dropped from 1,500vh to 540vh. Keep it that
+way — this audience will not scroll through five screens of animation to find out what
+the business does.
 
 🪤 The background canvas (`#stars`) is a **drifting network constellation**, not the old
 starfield: nodes drift and draw links under ~150 px. One rAF loop over ≤90 nodes, and it
