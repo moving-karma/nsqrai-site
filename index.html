@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NSQR AI — AI Infrastructure Design</title>
-<meta name="description" content="Rack layout, power, cooling and network fabric for GPU clusters — specified down to the cable length, before you spend a dollar on hardware.">
+<title>NSQR AI — IT Systems, Networks &amp; Websites for Small Business</title>
+<meta name="description" content="Websites, internet, networking, servers, cloud, backup, security and support for small businesses — designed, built and looked after as one system, by one engineer.">
 <style>
 :root{
   --bg:#04050c;
@@ -37,7 +37,7 @@ a{color:inherit}
 #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
 .vignette{
   position:fixed;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(ellipse 120% 80% at 50% 40%,transparent 30%,rgba(4,5,12,.75) 100%);
+  background:radial-gradient(ellipse 120% 80% at 50% 40%,transparent 30%,rgba(4,5,12,.78) 100%);
 }
 .grain{
   position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.035;mix-blend-mode:overlay;
@@ -76,7 +76,12 @@ nav{
   width:24px;height:24px;border:1.5px solid var(--cyan);border-radius:6px;
   display:grid;place-items:center;flex:0 0 auto;position:relative;
 }
-.logo-mark::after{content:"";width:7px;height:7px;background:var(--cyan);border-radius:1px;box-shadow:0 0 12px var(--cyan)}
+.logo-mark::after{
+  content:"";width:7px;height:7px;border-radius:1px;
+  background:linear-gradient(135deg,var(--cyan),var(--violet));
+  box-shadow:0 0 12px var(--cyan);animation:pulseDot 3.2s ease-in-out infinite;
+}
+@keyframes pulseDot{0%,100%{opacity:.65;box-shadow:0 0 8px var(--cyan)}50%{opacity:1;box-shadow:0 0 16px var(--cyan)}}
 .nav-links{display:flex;gap:26px;align-items:center}
 .nav-links a{text-decoration:none;font-size:.88rem;color:var(--muted);transition:color .18s}
 .nav-links a:hover{color:var(--text)}
@@ -92,6 +97,12 @@ nav{
   .nav-links{gap:12px}
   nav{padding:8px 8px 8px 14px}
   .nav-links a{font-size:.82rem}
+}
+/* The hero eyebrow is one long tracked-out line; below ~400px it runs into the
+   gutter. Tighten the tracking rather than let it wrap mid-phrase. */
+@media(max-width:420px){
+  .approach-copy .eyebrow{font-size:.6rem;letter-spacing:.15em;gap:8px}
+  .approach-copy .eyebrow::before{width:18px}
 }
 
 .btn{
@@ -126,8 +137,24 @@ nav{
 }
 .doorway::after{
   content:"";position:absolute;inset:0;
-  background:radial-gradient(ellipse at center,rgba(62,240,216,.14),transparent 68%);
+  background:radial-gradient(ellipse at center,rgba(124,92,255,.13),rgba(62,240,216,.13) 45%,transparent 70%);
 }
+/* capability rail — what the business actually covers, stated as chips */
+.chips{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+  margin:30px auto 0;max-width:660px;
+}
+.chips span{
+  font-family:var(--mono);font-size:.63rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line-2);border-radius:100px;
+  padding:5px 12px 5px 10px;display:inline-flex;align-items:center;gap:7px;
+  background:rgba(10,14,28,.5);
+}
+.chips span::before{
+  content:"";width:4px;height:4px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 6px var(--cyan);animation:pulseDot 2.6s ease-in-out infinite;
+}
+.chips span:nth-child(even)::before{background:var(--violet);box-shadow:0 0 6px var(--violet)}
 .scroll-hint{
   position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:4;
   font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;color:var(--dim);
@@ -140,6 +167,7 @@ nav{
 .corridor{
   position:absolute;inset:0;perspective:760px;perspective-origin:50% 50%;
   transform-style:preserve-3d;
+  --cw:clamp(230px,23vw,380px); /* half-width of the corridor at z=0 */
 }
 .corridor-inner{position:absolute;inset:0;transform-style:preserve-3d;
   transform:translateZ(calc(var(--p,0) * 3400px));
@@ -151,17 +179,21 @@ nav{
   border:1px solid #1b2440;
   box-shadow:0 0 40px rgba(0,0,0,.7);
 }
-.rk.l{left:50%;transform:translateX(-560px) rotateY(72deg) translateZ(var(--z))}
-.rk.r{left:50%;transform:translateX(410px) rotateY(-72deg) translateZ(var(--z))}
-.rk::before{ /* LED column */
+/* Transform ORDER is load-bearing. `translateX rotateY translateZ` (the obvious
+   spelling) applies translateZ in the element's ALREADY-ROTATED frame, so each
+   panel slides ~sin(68°)·z out sideways and every cabinet leaves the viewport —
+   the scene renders as an empty tunnel. Position first, rotate in place last. */
+.rk.l{left:50%;transform:translateX(calc((var(--cw) + 150px) * -1)) translateZ(var(--z)) rotateY(68deg)}
+.rk.r{left:50%;transform:translateX(var(--cw)) translateZ(var(--z)) rotateY(-68deg)}
+.rk::before{ /* link-light column */
   content:"";position:absolute;left:8px;top:14px;bottom:14px;width:3px;
   background:repeating-linear-gradient(180deg,var(--cyan) 0 3px,transparent 3px 13px);
   opacity:.5;
 }
-.rk::after{
+.rk::after{ /* uplink column */
   content:"";position:absolute;right:8px;top:20px;bottom:20px;width:2px;
-  background:repeating-linear-gradient(180deg,var(--amber) 0 2px,transparent 2px 17px);
-  opacity:.32;
+  background:repeating-linear-gradient(180deg,var(--violet) 0 2px,transparent 2px 17px);
+  opacity:.45;
 }
 .floor{
   position:absolute;left:0;right:0;bottom:0;height:52%;
@@ -178,7 +210,7 @@ nav{
 .corridor-hud .k{font-family:var(--mono);font-size:.68rem;letter-spacing:.24em;color:var(--cyan);text-transform:uppercase}
 .corridor-hud h2{margin-top:14px;font-size:clamp(1.5rem,3.4vw,2.6rem)}
 
-/* --- Scene 3: the rack --- */
+/* --- Scene 3: the stack --- */
 #s-rack{height:420vh}
 .rack-stage{width:min(1100px,92vw);display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
 @media(max-width:900px){.rack-stage{grid-template-columns:1fr;gap:26px}}
@@ -187,8 +219,8 @@ nav{
   transform:translate3d(0,0,0) scale(calc(.92 + min(var(--p,0),.3) * .27));
 }
 svg.rack{width:100%;height:auto;display:block;filter:drop-shadow(0 0 60px rgba(62,240,216,.10))}
-.u-unit{opacity:0;transform:translateX(26px)}
-.u-unit.in{opacity:1;transform:translateX(0);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+.u-unit{opacity:0;transform:translateY(16px)}
+.u-unit.in{opacity:1;transform:translateY(0);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
 .rack-readout{font-family:var(--mono)}
 .rack-readout .row{
   display:flex;justify-content:space-between;padding:13px 0;
@@ -212,36 +244,78 @@ svg.rack{width:100%;height:auto;display:block;filter:drop-shadow(0 0 60px rgba(6
 .sys h2{margin-bottom:16px}
 .sys p{color:var(--muted);max-width:52ch;margin:0 auto;font-size:1.02rem}
 .sys-vis{height:150px;margin-bottom:34px;display:grid;place-items:center}
-.bars{display:flex;gap:7px;align-items:flex-end;height:110px}
-.bars i{width:13px;background:linear-gradient(180deg,var(--cyan),rgba(62,240,216,.12));border-radius:2px;animation:bar 1.6s ease-in-out infinite}
-@keyframes bar{0%,100%{height:26%}50%{height:100%}}
-.heatbar{width:min(460px,80vw);height:12px;border-radius:100px;background:linear-gradient(90deg,var(--cyan),#6fe0a8,var(--amber),var(--red));box-shadow:0 0 40px rgba(255,181,69,.25)}
+
+/* presence: a site coming up */
+.brow{width:min(460px,80vw)}
+.brow .ld{animation:ldp 2.6s ease-in-out infinite}
+@keyframes ldp{0%,100%{opacity:.22}50%{opacity:.9}}
+.brow .scan{animation:scanx 3.4s linear infinite}
+@keyframes scanx{0%{transform:translateX(0);opacity:0}
+  10%{opacity:.9}90%{opacity:.9}100%{transform:translateX(330px);opacity:0}}
+
+/* connectivity: the network graph */
 .fabric{width:min(460px,80vw)}
 .fabric line{stroke:var(--line-2);stroke-width:1}
 .fabric .pulse{stroke:var(--cyan);stroke-width:1.6;stroke-dasharray:6 190;animation:dash 2.2s linear infinite}
+.fabric .pulse.v{stroke:var(--violet);animation-delay:1.1s}
 @keyframes dash{to{stroke-dashoffset:-196}}
 .fabric circle{fill:#0b1120;stroke:var(--cyan);stroke-width:1.2}
+
+/* continuity: shield + verification rings */
+.shield{width:min(460px,80vw)}
+.shield .ring{fill:none;stroke:var(--cyan);stroke-width:1;opacity:.18;animation:ringp 3.4s ease-in-out infinite}
+.shield .r2{animation-delay:.5s;stroke:var(--violet)}
+.shield .r3{animation-delay:1s}
+@keyframes ringp{0%,100%{opacity:.08}50%{opacity:.42}}
+.shield .sh{fill:rgba(62,240,216,.07);stroke:var(--cyan);stroke-width:1.4}
+.shield .ck{fill:none;stroke:var(--cyan);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.shield .tick{fill:var(--cyan);opacity:.5}
+
 .progress-rail{
   position:absolute;left:50%;bottom:6%;transform:translateX(-50%);
   display:flex;gap:8px;z-index:4;
 }
 .progress-rail i{width:34px;height:2px;background:var(--line-2);border-radius:2px;transition:background .3s}
-.progress-rail i.on{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.progress-rail i.on{background:linear-gradient(90deg,var(--cyan),var(--violet));box-shadow:0 0 12px rgba(62,240,216,.7)}
 
 /* ---------- standard sections ---------- */
 section.content{padding:110px 0;position:relative;z-index:2}
-.sec-head{max-width:62ch;margin-bottom:52px}
+/* faint engineering grid, faded at the edges — atmosphere, never a texture wall */
+section.content::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(62,240,216,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(62,240,216,.035) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 78% 62% at 50% 50%,#000,transparent 76%);
+  -webkit-mask-image:radial-gradient(ellipse 78% 62% at 50% 50%,#000,transparent 76%);
+}
+.sec-head{max-width:64ch;margin-bottom:52px}
 .sec-head p{color:var(--muted);margin:16px 0 0;font-size:1.04rem}
 
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 @media(max-width:940px){.cards{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.cards{grid-template-columns:1fr}}
 .card{
-  background:linear-gradient(180deg,rgba(16,22,42,.7),rgba(8,11,22,.7));
+  position:relative;overflow:hidden;
+  background-image:
+    linear-gradient(180deg,rgba(16,22,42,.7),rgba(8,11,22,.7)),
+    linear-gradient(115deg,transparent 42%,rgba(62,240,216,.10) 50%,transparent 58%);
+  background-size:100% 100%,260% 100%;
+  background-position:0 0,130% 0;
   border:1px solid var(--line);border-radius:14px;padding:28px 24px;
-  transition:border-color .25s,transform .25s;backdrop-filter:blur(6px);
+  transition:border-color .25s,transform .25s,background-position .9s ease;
+  backdrop-filter:blur(6px);
 }
-.card:hover{border-color:rgba(62,240,216,.35);transform:translateY(-4px)}
+.card:hover{border-color:rgba(62,240,216,.35);transform:translateY(-4px);background-position:0 0,-30% 0}
+/* HUD corner brackets */
+.card::before,.card::after{
+  content:"";position:absolute;width:13px;height:13px;
+  opacity:.22;transition:opacity .25s;pointer-events:none;
+}
+.card::before{top:9px;left:9px;border-left:1px solid var(--cyan);border-top:1px solid var(--cyan)}
+.card::after{bottom:9px;right:9px;border-right:1px solid var(--cyan);border-bottom:1px solid var(--cyan)}
+.card:hover::before,.card:hover::after{opacity:.85}
 .card-n{font-family:var(--mono);font-size:.68rem;color:var(--cyan);letter-spacing:.18em;margin-bottom:16px;opacity:.75}
 .card h3{margin-bottom:11px}
 .card p{color:var(--muted);font-size:.92rem;margin:0}
@@ -249,12 +323,33 @@ section.content{padding:110px 0;position:relative;z-index:2}
 .card li{font-family:var(--mono);font-size:.75rem;color:var(--dim);padding:4px 0 4px 15px;position:relative}
 .card li::before{content:"›";position:absolute;left:0;color:var(--cyan);opacity:.6}
 
+/* two wide panels under the grid — ongoing cover + the specialist build */
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:860px){.dual{grid-template-columns:1fr}}
+.panel{
+  position:relative;overflow:hidden;border-radius:14px;padding:32px 28px;
+  border:1px solid rgba(124,92,255,.28);
+  background:linear-gradient(150deg,rgba(24,20,54,.62),rgba(8,11,22,.72));
+}
+.panel::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:radial-gradient(ellipse 70% 100% at 100% 0%,rgba(124,92,255,.16),transparent 60%);
+}
+.panel .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--violet);margin-bottom:14px}
+.panel h3{font-size:1.3rem;margin-bottom:10px}
+.panel p{color:var(--muted);font-size:.94rem;margin:0}
+.panel ul{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.panel li{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line-2);border-radius:100px;padding:4px 11px;
+}
+
 .steps{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line-2)}
 @media(max-width:860px){.steps{grid-template-columns:1fr}}
 .step{padding:30px 26px 30px 0;border-right:1px solid var(--line);position:relative}
 .step:last-child{border-right:none}
 @media(max-width:860px){.step{border-right:none;border-bottom:1px solid var(--line);padding-right:0}}
-.step::before{content:"";position:absolute;top:-1px;left:0;width:34px;height:2px;background:var(--cyan)}
+.step::before{content:"";position:absolute;top:-1px;left:0;width:34px;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet))}
 .step-n{font-family:var(--mono);font-size:.68rem;color:var(--cyan);letter-spacing:.18em;margin-bottom:14px}
 .step h3{margin-bottom:9px;font-size:1rem}
 .step p{color:var(--muted);font-size:.87rem;margin:0}
@@ -323,10 +418,10 @@ footer a:hover{color:var(--cyan)}
     <a class="logo" href="#top"><span class="logo-mark"></span> NSQR&nbsp;AI</a>
     <div class="nav-links">
       <a href="#services">Services</a>
-      <a href="#process">Process</a>
+      <a href="#process">How it works</a>
       <a href="#about">About</a>
       <a href="/pay.html">Payments</a>
-      <a class="btn" href="#contact">Book a <span class="nav-cta-long">design </span>call</a>
+      <a class="btn" href="#contact">Book a <span class="nav-cta-long">free </span>call</a>
     </div>
   </nav>
 </header>
@@ -338,12 +433,17 @@ footer a:hover{color:var(--cyan)}
   <div class="stage">
     <div class="doorway"></div>
     <div class="approach-copy">
-      <p class="eyebrow" style="justify-content:center">AI Infrastructure Design</p>
-      <h1 class="grad">The GPUs are<br>the easy part.</h1>
+      <p class="eyebrow" style="justify-content:center">IT systems for small business</p>
+      <h1 class="grad">Get online.<br>Stay online.</h1>
       <p class="lede" style="margin:26px auto 0;text-align:center">
-        Power, cooling, fabric and rack layout decide whether your cluster runs at
-        spec — or throttles on day one.
+        Websites, internet, networks, servers, backups and security — built and looked
+        after as one system, by one engineer who picks up the phone.
       </p>
+      <div class="chips">
+        <span>Websites</span><span>Internet</span><span>Networks</span><span>Wi-Fi</span>
+        <span>Servers</span><span>Cloud &amp; Email</span><span>Backup</span>
+        <span>Security</span><span>Support</span>
+      </div>
     </div>
     <div class="scroll-hint">SCROLL TO ENTER<span></span></div>
   </div>
@@ -357,92 +457,118 @@ footer a:hover{color:var(--cyan)}
       <div class="floor"></div>
     </div>
     <div class="corridor-hud">
-      <div class="k">Cold aisle · 18 °C</div>
-      <h2 class="grad">Most first builds fail here.</h2>
+      <div class="k">Uplink · online · 1 Gbps</div>
+      <h2 class="grad">Most of it, you never see.</h2>
       <p class="lede" style="margin:14px auto 0;text-align:center">
-        Not on the GPUs — on the circuit that can't carry the load and the room
-        that can't reject the heat.
+        The website, the Wi-Fi, the line into the building, the box in the closet.
+        Get one layer wrong and everything above it feels slow, flaky or broken.
       </p>
     </div>
   </div>
 </section>
 
-<!-- ==================== SCENE 3 — THE RACK ==================== -->
+<!-- ==================== SCENE 3 — THE STACK ==================== -->
 <section class="scene" id="s-rack">
   <div class="stage">
     <div class="rack-stage">
       <div class="rack-svg-wrap">
-        <svg class="rack" viewBox="0 0 340 400" role="img" aria-label="42U rack elevation assembling: GPU nodes, switching, storage, UPS and PDU.">
+        <svg class="rack" viewBox="0 0 340 400" role="img" aria-label="The nine layers of a small-business IT system assembling from the internet circuit at the bottom to the public website at the top.">
           <defs>
-            <linearGradient id="gpuFill" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#132038"/><stop offset="100%" stop-color="#0b1424"/>
+            <linearGradient id="wash" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#3ef0d8" stop-opacity=".20"/>
+              <stop offset="100%" stop-color="#7c5cff" stop-opacity=".18"/>
             </linearGradient>
-            <linearGradient id="heat" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0%" stop-color="#3ef0d8" stop-opacity=".26"/>
-              <stop offset="100%" stop-color="#ffb545" stop-opacity=".22"/>
+            <linearGradient id="netFill" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#0d1a26"/><stop offset="100%" stop-color="#091420"/>
+            </linearGradient>
+            <linearGradient id="cloudFill" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#161334"/><stop offset="100%" stop-color="#0c0d20"/>
             </linearGradient>
           </defs>
-          <rect x="70" y="24" width="200" height="360" fill="url(#heat)" opacity=".45"/>
-          <rect x="72" y="26" width="196" height="356" fill="none" stroke="#232c47" stroke-width="1.5" rx="3"/>
+
+          <rect x="62" y="24" width="216" height="356" fill="url(#wash)" opacity=".5"/>
+          <rect x="62" y="24" width="216" height="356" fill="none" stroke="#232c47" stroke-width="1.5" rx="3"/>
+          <!-- spine -->
+          <line x1="56" y1="34" x2="56" y2="370" stroke="#232c47" stroke-width="1"/>
+
           <g font-family="ui-monospace,monospace" font-size="7">
+            <!-- DOM order is reveal order: bottom (the street) upward to the public site -->
             <g class="u-unit" data-i="0">
-              <rect x="78" y="34" width="184" height="17" fill="#0d1a26" stroke="#1c8f83" stroke-width=".8" rx="2"/>
-              <text x="86" y="46" fill="#3ef0d8">400G SPINE · 64-PORT</text>
+              <rect x="70" y="338" width="200" height="30" fill="url(#netFill)" stroke="#1c8f83" stroke-width=".8" rx="2"/>
+              <text x="78" y="351" fill="#3ef0d8">INTERNET CIRCUIT</text>
+              <text x="78" y="362" fill="#5a6a8a">FIBER + LTE FAILOVER</text>
+              <circle cx="56" cy="353" r="2.6" fill="#3ef0d8"/><text x="50" y="356" fill="#3a4a6a" text-anchor="end">L1</text>
+              <circle cx="286" cy="353" r="2.2" fill="#3ef0d8" opacity=".8"/>
             </g>
             <g class="u-unit" data-i="1">
-              <rect x="78" y="55" width="184" height="17" fill="#0d1a26" stroke="#1c8f83" stroke-width=".8" rx="2"/>
-              <text x="86" y="67" fill="#3ef0d8">LEAF · RAIL-OPTIMIZED</text>
+              <rect x="70" y="300" width="200" height="30" fill="url(#netFill)" stroke="#1c8f83" stroke-width=".8" rx="2"/>
+              <text x="78" y="313" fill="#3ef0d8">FIREWALL · VPN</text>
+              <text x="78" y="324" fill="#5a6a8a">GUEST / STAFF / PAYMENTS SPLIT</text>
+              <circle cx="56" cy="315" r="2.6" fill="#3ef0d8"/><text x="50" y="318" fill="#3a4a6a" text-anchor="end">L2</text>
+              <circle cx="286" cy="315" r="2.2" fill="#3ef0d8" opacity=".8"/>
             </g>
             <g class="u-unit" data-i="2">
-              <rect x="78" y="82" width="184" height="34" fill="url(#gpuFill)" stroke="#232c47" rx="2"/>
-              <text x="86" y="96" fill="#e9edf7">HGX 8×GPU NODE 01</text>
-              <text x="86" y="108" fill="#5a6a8a">10.2 kW · 8U</text>
-              <rect x="228" y="90" width="26" height="4" fill="#3ef0d8" opacity=".7"/>
-              <rect x="228" y="100" width="18" height="4" fill="#3ef0d8" opacity=".45"/>
+              <rect x="70" y="262" width="200" height="30" fill="url(#netFill)" stroke="#17635e" stroke-width=".8" rx="2"/>
+              <text x="78" y="275" fill="#3ef0d8">CORE SWITCH · PoE</text>
+              <text x="78" y="286" fill="#5a6a8a">STRUCTURED CABLING · 24 PORT</text>
+              <circle cx="56" cy="277" r="2.6" fill="#3ef0d8" opacity=".85"/><text x="50" y="280" fill="#3a4a6a" text-anchor="end">L3</text>
+              <circle cx="286" cy="277" r="2.2" fill="#3ef0d8" opacity=".7"/>
             </g>
             <g class="u-unit" data-i="3">
-              <rect x="78" y="120" width="184" height="34" fill="url(#gpuFill)" stroke="#232c47" rx="2"/>
-              <text x="86" y="134" fill="#e9edf7">HGX 8×GPU NODE 02</text>
-              <text x="86" y="146" fill="#5a6a8a">10.2 kW · 8U</text>
-              <rect x="228" y="128" width="24" height="4" fill="#3ef0d8" opacity=".7"/>
-              <rect x="228" y="138" width="20" height="4" fill="#3ef0d8" opacity=".5"/>
+              <rect x="70" y="224" width="200" height="30" fill="url(#netFill)" stroke="#17635e" stroke-width=".8" rx="2"/>
+              <text x="78" y="237" fill="#3ef0d8">WI-FI · MESH COVERAGE</text>
+              <text x="78" y="248" fill="#5a6a8a">SURVEYED · NO DEAD CORNERS</text>
+              <circle cx="56" cy="239" r="2.6" fill="#3ef0d8" opacity=".85"/><text x="50" y="242" fill="#3a4a6a" text-anchor="end">L4</text>
+              <circle cx="286" cy="239" r="2.2" fill="#3ef0d8" opacity=".7"/>
             </g>
             <g class="u-unit" data-i="4">
-              <rect x="78" y="158" width="184" height="34" fill="url(#gpuFill)" stroke="#232c47" rx="2"/>
-              <text x="86" y="172" fill="#e9edf7">HGX 8×GPU NODE 03</text>
-              <text x="86" y="184" fill="#5a6a8a">10.2 kW · 8U</text>
-              <rect x="228" y="166" width="20" height="4" fill="#3ef0d8" opacity=".6"/>
-              <rect x="228" y="176" width="25" height="4" fill="#3ef0d8" opacity=".7"/>
+              <rect x="70" y="186" width="200" height="30" fill="#0b1120" stroke="#232c47" rx="2"/>
+              <text x="78" y="199" fill="#e9edf7">SERVER / NAS</text>
+              <text x="78" y="210" fill="#5a6a8a">VIRTUALIZED · RAID · UPS</text>
+              <circle cx="56" cy="201" r="2.6" fill="#8b9ab8"/><text x="50" y="204" fill="#3a4a6a" text-anchor="end">L5</text>
+              <circle cx="286" cy="201" r="2.2" fill="#8b9ab8" opacity=".7"/>
             </g>
             <g class="u-unit" data-i="5">
-              <rect x="78" y="198" width="184" height="24" fill="#0a1018" stroke="#232c47" rx="2"/>
-              <text x="86" y="213" fill="#8b9ab8">NVMe STORAGE · 4U</text>
+              <rect x="70" y="148" width="200" height="30" fill="#0b1120" stroke="#232c47" rx="2"/>
+              <text x="78" y="161" fill="#e9edf7">WORKSTATIONS · DEVICES</text>
+              <text x="78" y="172" fill="#5a6a8a">IMAGED · PATCHED · TRACKED</text>
+              <circle cx="56" cy="163" r="2.6" fill="#8b9ab8"/><text x="50" y="166" fill="#3a4a6a" text-anchor="end">L6</text>
+              <circle cx="286" cy="163" r="2.2" fill="#8b9ab8" opacity=".7"/>
             </g>
             <g class="u-unit" data-i="6">
-              <rect x="78" y="228" width="184" height="14" fill="#070b12" stroke="#151b2e" stroke-dasharray="3 3" rx="2"/>
-              <text x="86" y="238" fill="#5a6a8a">BLANKING PANEL · 2U</text>
+              <rect x="70" y="110" width="200" height="30" fill="url(#cloudFill)" stroke="#4a3d8f" rx="2"/>
+              <text x="78" y="123" fill="#b6a8ff">CLOUD &amp; EMAIL</text>
+              <text x="78" y="134" fill="#5a6a8a">MICROSOFT 365 / GOOGLE WORKSPACE</text>
+              <circle cx="56" cy="125" r="2.6" fill="#7c5cff"/><text x="50" y="128" fill="#3a4a6a" text-anchor="end">L7</text>
+              <circle cx="286" cy="125" r="2.2" fill="#7c5cff" opacity=".8"/>
             </g>
             <g class="u-unit" data-i="7">
-              <rect x="78" y="248" width="184" height="22" fill="#151017" stroke="#4a3520" rx="2"/>
-              <text x="86" y="262" fill="#ffb545">UPS · N+1 · 20 min</text>
+              <rect x="70" y="72" width="200" height="30" fill="url(#cloudFill)" stroke="#4a3d8f" rx="2"/>
+              <text x="78" y="85" fill="#b6a8ff">BACKUP · 3-2-1</text>
+              <text x="78" y="96" fill="#5a6a8a">OFFSITE · VERSIONED · RESTORE-TESTED</text>
+              <circle cx="56" cy="87" r="2.6" fill="#7c5cff"/><text x="50" y="90" fill="#3a4a6a" text-anchor="end">L8</text>
+              <circle cx="286" cy="87" r="2.2" fill="#7c5cff" opacity=".8"/>
             </g>
             <g class="u-unit" data-i="8">
-              <rect x="78" y="276" width="184" height="22" fill="#151017" stroke="#4a3520" rx="2"/>
-              <text x="86" y="290" fill="#ffb545">PDU A/B · 3-PHASE 415V</text>
+              <rect x="70" y="34" width="200" height="30" fill="#0d1f26" stroke="#3ef0d8" stroke-width="1.1" rx="2"/>
+              <text x="78" y="47" fill="#3ef0d8">WEBSITE · TLS · CDN</text>
+              <text x="78" y="58" fill="#7d93b8">WHAT YOUR CUSTOMERS ACTUALLY SEE</text>
+              <circle cx="56" cy="49" r="3" fill="#3ef0d8"/><text x="50" y="52" fill="#3a4a6a" text-anchor="end">L9</text>
+              <circle cx="286" cy="49" r="2.6" fill="#3ef0d8"/>
             </g>
           </g>
         </svg>
       </div>
 
       <div class="rack-readout">
-        <p class="eyebrow">Rack elevation · 42U</p>
-        <h2 class="grad">Every U accounted for.</h2>
-        <p>Compute, switching, storage, blanking, power — drawn to scale with service
-           clearance, before a single item is ordered.</p>
-        <div class="row"><span>TOTAL LOAD</span><span id="cnt-load">0.0 kW</span></div>
-        <div class="row"><span>COOLING</span><span>RDHx</span></div>
-        <div class="row"><span>ΔT ACROSS</span><span id="cnt-dt">0 °C</span></div>
-        <div class="row"><span>REDUNDANCY</span><span>2N POWER</span></div>
+        <p class="eyebrow">System map · 9 layers</p>
+        <h2 class="grad">Every layer accounted for.</h2>
+        <p>From the line at the wall to the page your customers land on — mapped, built
+           and written down as one system, not six vendors pointing at each other.</p>
+        <div class="row"><span>LAYERS MAPPED</span><span id="cnt-layers">0 / 9</span></div>
+        <div class="row"><span>UPTIME TARGET</span><span>99.9 %</span></div>
+        <div class="row"><span>RESTORE POINT</span><span id="cnt-rpo">0 min</span></div>
+        <div class="row"><span>ESCALATION</span><span>ONE NUMBER</span></div>
       </div>
     </div>
   </div>
@@ -454,25 +580,32 @@ footer a:hover{color:var(--cyan)}
     <div class="sys">
       <div class="sys-layer" data-k="0">
         <div>
-          <div class="sys-vis"><div class="bars" id="bars"></div></div>
+          <div class="sys-vis">
+            <svg class="brow" viewBox="0 0 460 130">
+              <rect x="62" y="12" width="336" height="106" rx="9" fill="#0a1020" stroke="#232c47"/>
+              <line x1="62" y1="38" x2="398" y2="38" stroke="#232c47"/>
+              <circle cx="78" cy="25" r="3.4" fill="#3ef0d8" opacity=".85"/>
+              <circle cx="90" cy="25" r="3.4" fill="#7c5cff" opacity=".7"/>
+              <circle cx="102" cy="25" r="3.4" fill="#ffb545" opacity=".55"/>
+              <rect x="116" y="19" width="170" height="12" rx="6" fill="#111a2e"/>
+              <rect x="123" y="23" width="9" height="4" rx="2" fill="#3ef0d8" opacity=".8"/>
+              <rect x="138" y="23" width="72" height="4" rx="2" fill="#3ef0d8" opacity=".45"/>
+              <rect class="ld" x="78" y="52" width="118" height="10" rx="3" fill="#3ef0d8" style="animation-delay:0s"/>
+              <rect class="ld" x="78" y="70" width="196" height="6" rx="3" fill="#8b9ab8" style="animation-delay:.25s"/>
+              <rect class="ld" x="78" y="82" width="152" height="6" rx="3" fill="#8b9ab8" style="animation-delay:.5s"/>
+              <rect class="ld" x="78" y="98" width="66" height="12" rx="6" fill="#7c5cff" style="animation-delay:.75s"/>
+              <rect class="ld" x="300" y="52" width="80" height="58" rx="5" fill="#111a2e" style="animation-delay:.4s"/>
+              <rect class="scan" x="63" y="39" width="2" height="78" fill="#3ef0d8" opacity=".9"/>
+            </svg>
+          </div>
           <div class="sys-num">SYSTEM 01</div>
-          <h2 class="grad">Power</h2>
-          <p>Load budget from the GPU up to the utility feed. Three-phase distribution,
-             PDU sizing, UPS runtime and N+1 or 2N topology — sized with real headroom,
-             not nameplate guesswork.</p>
+          <h2 class="grad">Presence</h2>
+          <p>The site people find, the address they email, the profile that puts you on the
+             map. Built fast and secure, hosted properly, and owned by you — not rented
+             back to you a page at a time.</p>
         </div>
       </div>
       <div class="sys-layer" data-k="1">
-        <div>
-          <div class="sys-vis"><div class="heatbar"></div></div>
-          <div class="sys-num">SYSTEM 02</div>
-          <h2 class="grad">Thermal</h2>
-          <p>The constraint that kills most first builds. CFM budget, ΔT targets,
-             containment strategy — and an honest call on the point where air stops
-             being viable and liquid starts.</p>
-        </div>
-      </div>
-      <div class="sys-layer" data-k="2">
         <div>
           <div class="sys-vis">
             <svg class="fabric" viewBox="0 0 460 110">
@@ -480,15 +613,40 @@ footer a:hover{color:var(--cyan)}
               <line x1="30" y1="20" x2="130" y2="90"/><line x1="130" y1="90" x2="230" y2="20"/>
               <line x1="230" y1="20" x2="330" y2="90"/><line x1="330" y1="90" x2="430" y2="20"/>
               <line class="pulse" x1="30" y1="20" x2="430" y2="20"/>
-              <line class="pulse" x1="30" y1="20" x2="330" y2="90"/>
+              <line class="pulse v" x1="30" y1="20" x2="330" y2="90"/>
               <circle cx="30" cy="20" r="7"/><circle cx="230" cy="20" r="7"/><circle cx="430" cy="20" r="7"/>
               <circle cx="130" cy="90" r="7"/><circle cx="330" cy="90" r="7"/>
             </svg>
           </div>
+          <div class="sys-num">SYSTEM 02</div>
+          <h2 class="grad">Connectivity</h2>
+          <p>The right line into the building, a second path for when it drops, and a
+             network behind it that reaches every corner — with the card terminal, the
+             staff laptops and the guest Wi-Fi kept apart.</p>
+        </div>
+      </div>
+      <div class="sys-layer" data-k="2">
+        <div>
+          <div class="sys-vis">
+            <svg class="shield" viewBox="0 0 460 130">
+              <g transform="translate(230,65)">
+                <circle class="ring" r="30"/><circle class="ring r2" r="45"/><circle class="ring r3" r="60"/>
+                <path class="sh" d="M0,-32 L23,-21 V4 C23,21 11,31 0,35 C-11,31 -23,21 -23,4 V-21 Z"/>
+                <path class="ck" d="M-9,1 l6,7 l12,-15"/>
+                <rect class="tick" x="-104" y="-2" width="14" height="4" rx="2"/>
+                <rect class="tick" x="-84" y="-2" width="14" height="4" rx="2" opacity=".35"/>
+                <rect class="tick" x="-64" y="-2" width="14" height="4" rx="2" opacity=".2"/>
+                <rect class="tick" x="90" y="-2" width="14" height="4" rx="2"/>
+                <rect class="tick" x="70" y="-2" width="14" height="4" rx="2" opacity=".35"/>
+                <rect class="tick" x="50" y="-2" width="14" height="4" rx="2" opacity=".2"/>
+              </g>
+            </svg>
+          </div>
           <div class="sys-num">SYSTEM 03</div>
-          <h2 class="grad">Fabric</h2>
-          <p>Spine-leaf topology, rail-optimised for GPU traffic — specified down to
-             optic type, DAC versus AOC, and the length of every individual cable run.</p>
+          <h2 class="grad">Continuity</h2>
+          <p>Backups that are offsite, versioned and actually restore-tested. Patching,
+             MFA and least privilege done quietly in the background. And one number to
+             call on the day something still goes wrong.</p>
         </div>
       </div>
     </div>
@@ -500,31 +658,60 @@ footer a:hover{color:var(--cyan)}
 <section class="content" id="services">
   <div class="wrap">
     <div class="sec-head rv">
-      <p class="eyebrow">What I deliver</p>
-      <h2 class="grad">A complete build package, before anything is ordered.</h2>
-      <p>You tell me what you're trying to run. I come back with the blueprint, the specs
-         and the bill of materials — the whole physical layer engineered as one system
-         instead of six disconnected purchases.</p>
+      <p class="eyebrow">What I do</p>
+      <h2 class="grad">Everything a small business needs, from one person.</h2>
+      <p>You shouldn't need a web guy, a phone guy, a network guy and a nephew — each
+         owning a piece and none of them owning the outcome. Take the parts you need,
+         or hand over the whole stack.</p>
     </div>
     <div class="cards">
-      <div class="card rv"><div class="card-n">01</div><h3>Capacity &amp; requirements</h3>
-        <p>Your workload translated into node count, memory, interconnect and growth headroom.</p>
-        <ul><li>Training vs inference profiling</li><li>Node count &amp; GPU selection</li><li>18–36 month headroom</li></ul></div>
-      <div class="card rv"><div class="card-n">02</div><h3>Rack elevation &amp; floor plan</h3>
-        <p>Every U accounted for, with aisle layout and service clearance drawn to scale.</p>
-        <ul><li>42U / 48U elevations</li><li>Hot &amp; cold aisle containment</li><li>Floor loading &amp; clearance</li></ul></div>
-      <div class="card rv"><div class="card-n">03</div><h3>Power &amp; electrical</h3>
-        <p>Load budget from the GPU to the utility feed, sized with real headroom.</p>
-        <ul><li>3-phase distribution &amp; PDU</li><li>UPS runtime, N+1 / 2N</li><li>Breaker &amp; generator planning</li></ul></div>
-      <div class="card rv"><div class="card-n">04</div><h3>Thermal &amp; airflow</h3>
-        <p>CFM budget, ΔT targets, and an honest call on when air stops being viable.</p>
-        <ul><li>CFM &amp; ΔT modelling</li><li>Containment vs RDHx vs DLC</li><li>Hot-spot mitigation</li></ul></div>
-      <div class="card rv"><div class="card-n">05</div><h3>Network fabric</h3>
-        <p>Rail-optimised spine-leaf, specified to optic type and individual cable length.</p>
-        <ul><li>InfiniBand / RoCE topology</li><li>Switch &amp; optic selection</li><li>DAC vs AOC runs</li></ul></div>
-      <div class="card rv"><div class="card-n">06</div><h3>Bill of materials</h3>
-        <p>One priced, ordered, vendor-ready list. No surprise $40k line item in week three.</p>
-        <ul><li>Line-item BOM with part numbers</li><li>Lead times &amp; sequencing</li><li>Procurement support</li></ul></div>
+      <div class="card rv"><div class="card-n">01</div><h3>Website &amp; online presence</h3>
+        <p>Designed, built and hosted — fast, secure and actually yours. Plus the domain, the business email and the listings that get you found.</p>
+        <ul><li>Design, build &amp; hosting</li><li>Domain, DNS, TLS &amp; email</li><li>Google Business Profile &amp; SEO basics</li></ul></div>
+      <div class="card rv"><div class="card-n">02</div><h3>Internet &amp; connectivity</h3>
+        <p>The right line into the building, sized for what you actually do — with a second path so an outage isn't a closed day.</p>
+        <ul><li>ISP selection &amp; sizing</li><li>Static IP, DNS &amp; port forwarding</li><li>LTE / 5G automatic failover</li></ul></div>
+      <div class="card rv"><div class="card-n">03</div><h3>Networks &amp; Wi-Fi</h3>
+        <p>Coverage that reaches the back office and the loading door, on a network that keeps guests, staff and payments apart.</p>
+        <ul><li>Structured cabling &amp; switching</li><li>Wi-Fi survey &amp; mesh coverage</li><li>Firewall, VLANs &amp; remote VPN</li></ul></div>
+      <div class="card rv"><div class="card-n">04</div><h3>Servers &amp; storage</h3>
+        <p>Specified, built and deployed — in your closet, a colo or the cloud. From one file server to a rack that has to be right first time.</p>
+        <ul><li>Spec, build &amp; deployment</li><li>NAS, RAID &amp; virtualization</li><li>Racks, power, UPS &amp; cooling</li></ul></div>
+      <div class="card rv"><div class="card-n">05</div><h3>Computers &amp; devices</h3>
+        <p>Machines that fit the work, set up identically, and replaced on a schedule instead of on the morning one dies.</p>
+        <ul><li>Procurement &amp; standard imaging</li><li>Printers, POS &amp; peripherals</li><li>Refresh planning &amp; asset list</li></ul></div>
+      <div class="card rv"><div class="card-n">06</div><h3>Cloud, email &amp; files</h3>
+        <p>Microsoft 365 or Google Workspace, migrated without losing mail — with sharing and permissions that make sense to non-technical staff.</p>
+        <ul><li>M365 / Workspace setup</li><li>Mailbox &amp; file migration</li><li>Shared drives &amp; access control</li></ul></div>
+      <div class="card rv"><div class="card-n">07</div><h3>Backup &amp; recovery</h3>
+        <p>Offsite, versioned and ransomware-resistant — and restore-tested, because a backup nobody has restored from isn't a backup.</p>
+        <ul><li>3-2-1 with an offsite copy</li><li>Immutable / versioned snapshots</li><li>Restore drills &amp; recovery plan</li></ul></div>
+      <div class="card rv"><div class="card-n">08</div><h3>Security</h3>
+        <p>The unglamorous basics, done properly: MFA everywhere, patches applied, least privilege, and staff who can spot a fake invoice.</p>
+        <ul><li>MFA &amp; password management</li><li>Patching &amp; endpoint protection</li><li>Phishing awareness &amp; policy</li></ul></div>
+      <div class="card rv"><div class="card-n">09</div><h3>Support &amp; troubleshooting</h3>
+        <p>When something breaks, one number. Remote first, on-site when it has to be, and a straight answer about what actually happened.</p>
+        <ul><li>Remote &amp; on-site response</li><li>Monitoring &amp; alerting</li><li>Root cause, not just a reboot</li></ul></div>
+    </div>
+
+    <div class="dual">
+      <div class="panel rv">
+        <div class="k">Ongoing cover</div>
+        <h3>Or hand the whole thing over.</h3>
+        <p>A flat monthly plan instead of a phone call you're dreading the bill for.
+           I watch it, patch it, verify the backups actually restored, and you get
+           support without counting the hours. Cancel whenever — nothing here is a
+           three-year contract.</p>
+        <ul><li>Monitoring</li><li>Patching</li><li>Backup verification</li><li>Unlimited support</li><li>Quarterly review</li></ul>
+      </div>
+      <div class="panel rv">
+        <div class="k">Specialist builds</div>
+        <h3>AI &amp; GPU infrastructure.</h3>
+        <p>The heavy end of the same work: capacity planning, rack elevations, three-phase
+           power, thermal and airflow, InfiniBand/RoCE fabric and a priced bill of materials
+           for teams deploying H200 / B200-class nodes at 10–14 kW apiece.</p>
+        <ul><li>Capacity planning</li><li>Rack elevations</li><li>Power &amp; thermal</li><li>Network fabric</li><li>Bill of materials</li></ul>
+      </div>
     </div>
   </div>
 </section>
@@ -533,17 +720,17 @@ footer a:hover{color:var(--cyan)}
   <div class="wrap">
     <div class="sec-head rv">
       <p class="eyebrow">How it works</p>
-      <h2 class="grad">Call to blueprint, without the enterprise runaround.</h2>
+      <h2 class="grad">Call to working, without the runaround.</h2>
     </div>
     <div class="steps">
-      <div class="step rv"><div class="step-n">STEP 01</div><h3>Discovery call</h3>
-        <p>You describe what you're trying to achieve. I ask the questions that surface the constraints you haven't hit yet.</p></div>
-      <div class="step rv"><div class="step-n">STEP 02</div><h3>Design &amp; blueprint</h3>
-        <p>Rack elevations, power budget, thermal model and fabric topology — documents your electrician and vendors can build from.</p></div>
-      <div class="step rv"><div class="step-n">STEP 03</div><h3>Specs &amp; BOM</h3>
-        <p>Exact part numbers, quantities, cable lengths and lead times, priced and sequenced.</p></div>
-      <div class="step rv"><div class="step-n">STEP 04</div><h3>Build support</h3>
-        <p>I stay reachable through install and bring-up, so the plan survives contact with the room.</p></div>
+      <div class="step rv"><div class="step-n">STEP 01</div><h3>Free discovery call</h3>
+        <p>Tell me what's slow, broken or missing. I ask the questions that surface what's actually causing it — no charge, no obligation.</p></div>
+      <div class="step rv"><div class="step-n">STEP 02</div><h3>Audit &amp; plan</h3>
+        <p>I map what you have, what's at risk and what it costs to fix — written down, priced and put in priority order so you can choose.</p></div>
+      <div class="step rv"><div class="step-n">STEP 03</div><h3>Build &amp; migrate</h3>
+        <p>Done in a sequence that keeps you trading, with evening or weekend cutovers wherever downtime would cost you real money.</p></div>
+      <div class="step rv"><div class="step-n">STEP 04</div><h3>Support &amp; improve</h3>
+        <p>I stay reachable — ad-hoc or on a monthly plan. Everything is documented in your name, so you're never locked in to me.</p></div>
     </div>
   </div>
 </section>
@@ -552,32 +739,34 @@ footer a:hover{color:var(--cyan)}
   <div class="wrap">
     <div class="sec-head rv">
       <p class="eyebrow">Who you're working with</p>
-      <h2 class="grad">Design that starts with the constraints, not the catalogue.</h2>
+      <h2 class="grad">One engineer, the whole stack.</h2>
     </div>
     <div class="about">
       <div class="rv">
-        <p>I'm <strong>Nicolas Quiroz</strong>. I help startups design and build the physical
-           infrastructure their AI workloads run on — from a single 8-GPU node in a server
-           room to multi-rack deployments with dedicated power and cooling.</p>
-        <p>Most teams deploying GPUs for the first time budget carefully for the hardware and
-           discover the hard constraints afterwards: the circuit can't carry the load, the room
-           can't reject the heat, the cables are the wrong length, the switch has the wrong
-           optics. Each is a delay measured in weeks and a cost measured in five figures.</p>
-        <p>The approach is deliberately unglamorous — establish the hard limits first, then
-           design inside them. It is far cheaper to find a constraint on a drawing than on a
-           loading dock.</p>
+        <p>I'm <strong>Nicolas Quiroz</strong>. I build and run the technology small businesses
+           depend on — the website customers land on, the internet line and network behind the
+           counter, the server in the closet, and the backups that mean a bad day doesn't become
+           a lost year.</p>
+        <p>Most small businesses end up with three or four vendors who each own a piece and none
+           of whom own the result. The web company blames the host, the host blames the network,
+           and the person who wired it left two years ago. Nobody has the whole picture, so the
+           same problem keeps coming back.</p>
+        <p>The approach is deliberately unglamorous: find the real constraint first, fix that,
+           and write down what was done. <strong>Every account, licence and domain is registered
+           in your name</strong> — if you ever want to leave, you take the whole system with you.</p>
       </div>
       <div class="rv">
-        <div class="callout"><div class="k">Typical engagement</div>
-          <p>A startup with funding for compute, a room or colo cage, and no in-house datacenter
-             engineer. You know the GPUs you want. You need everything between the wall and the
-             workload specified correctly the first time.</p></div>
+        <div class="callout"><div class="k">Typical client</div>
+          <p>A business of roughly 3–100 people with no IT department — an office, a clinic, a
+             shop, a trades company or a growing startup. You need it to work, not a project
+             plan about working.</p></div>
         <div class="callout" style="margin-top:18px"><div class="k">Where I work</div>
-          <p>Design and specification delivered remotely, anywhere. On-site build support is
-             available in any region — scope, timing and travel agreed per engagement.</p></div>
-        <div class="callout" style="margin-top:18px"><div class="k">Engagement</div>
-          <p>Every build is scoped individually. Send the details and you'll get a clear proposal
-             before anything is committed.</p></div>
+          <p>Remote worldwide, and on-site anywhere by arrangement. Most things are fixed
+             remotely the same day; travel is scoped and agreed up front, never billed as a
+             surprise.</p></div>
+        <div class="callout" style="margin-top:18px"><div class="k">How it's priced</div>
+          <p>Fixed price per project, or a flat monthly plan for ongoing cover. Quoted before
+             anything starts, so you approve a number rather than receive one.</p></div>
       </div>
     </div>
   </div>
@@ -588,13 +777,13 @@ footer a:hover{color:var(--cyan)}
     <div class="contact-grid">
       <div class="rv">
         <p class="eyebrow">Get in touch</p>
-        <h2 class="grad">Tell me what you're building.</h2>
-        <p class="lede" style="margin-top:18px">Send over what you're trying to run and the room
-           you have to run it in. I'll come back with an honest read on what it takes — and
-           whether you actually need me.</p>
+        <h2 class="grad">Tell me what's not working.</h2>
+        <p class="lede" style="margin-top:18px">Describe what you've got and what's going
+           wrong — or what you're trying to launch. You'll get an honest read on what it
+           takes, and whether you actually need me.</p>
         <div class="callout" style="margin-top:28px"><div class="k">Useful to include</div>
-          <p>Workload type · GPU count or budget · available power · room or colo details ·
-             target timeline.</p></div>
+          <p>How many people and locations · what's broken or missing · whether you have a
+             website today · any deadline you're working to.</p></div>
       </div>
       <form id="lead-form" class="rv" novalidate>
         <div class="row">
@@ -602,7 +791,7 @@ footer a:hover{color:var(--cyan)}
           <div><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
         </div>
         <div><label for="company">Company</label><input id="company" name="company" type="text" autocomplete="organization"></div>
-        <div><label for="message">What are you building?</label><textarea id="message" name="message" required></textarea></div>
+        <div><label for="message">What do you need?</label><textarea id="message" name="message" required></textarea></div>
         <div class="hp" aria-hidden="true"><label for="company_website">Leave empty</label>
           <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off"></div>
         <input type="hidden" name="source" value="nsqrai.com">
@@ -618,7 +807,7 @@ footer a:hover{color:var(--cyan)}
 
 <footer>
   <div class="wrap foot">
-    <div>© 2026 NSQR AI · AI infrastructure design &amp; specification</div>
+    <div>© 2026 NSQR AI · IT systems, networks &amp; websites for small business</div>
     <div><a href="/pay.html">Payments</a> · <a href="mailto:nicolas@nsqrai.com">nicolas@nsqrai.com</a></div>
   </div>
 </footer>
@@ -630,38 +819,76 @@ var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZ
   'use strict';
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- starfield ---------- */
-  (function stars(){
-    var c = document.getElementById('stars'), x = c.getContext('2d'), pts = [], w, h;
+  /* ---------- background: a drifting network constellation ----------
+     Replaces the old starfield. Nodes drift and link when they get close,
+     which is the site's subject matter rather than decoration. Costs one
+     rAF loop over ~90 nodes; paused whenever the tab is hidden. */
+  (function net(){
+    var c = document.getElementById('stars'); if (!c) return;
+    var x = c.getContext('2d');
+    var dpr = Math.min(devicePixelRatio || 1, 2);
+    var pts = [], w = 0, h = 0, link = 0, raf = 0;
+
     function size(){
-      w = c.width = innerWidth * devicePixelRatio;
-      h = c.height = innerHeight * devicePixelRatio;
+      w = c.width = innerWidth * dpr;
+      h = c.height = innerHeight * dpr;
       c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
+      link = Math.min(150, innerWidth / 9) * dpr;
+      var n = Math.max(28, Math.min(90, Math.round(innerWidth * innerHeight / 16000)));
       pts = [];
-      var n = Math.min(220, Math.round(innerWidth * innerHeight / 9000));
       for (var i = 0; i < n; i++) pts.push({
         x: Math.random() * w, y: Math.random() * h,
-        r: Math.random() * 1.3 * devicePixelRatio + .2,
-        a: Math.random() * .5 + .12, s: Math.random() * .5 + .1
+        vx: (Math.random() - .5) * .17 * dpr,
+        vy: (Math.random() - .5) * .17 * dpr,
+        r: (Math.random() * 1.2 + .5) * dpr,
+        a: Math.random() * .4 + .22
       });
     }
-    var off = 0;
-    function draw(){
-      x.clearRect(0,0,w,h);
-      off = scrollY * .12 * devicePixelRatio;
-      for (var i = 0; i < pts.length; i++){
-        var p = pts[i], y = (p.y - off * p.s) % h; if (y < 0) y += h;
-        x.globalAlpha = p.a; x.fillStyle = '#cfe3ff';
-        x.beginPath(); x.arc(p.x, y, p.r, 0, 6.283); x.fill();
+
+    function draw(move){
+      var i, j, p;
+      if (move) {
+        for (i = 0; i < pts.length; i++){
+          p = pts[i];
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0) p.x += w; else if (p.x > w) p.x -= w;
+          if (p.y < 0) p.y += h; else if (p.y > h) p.y -= h;
+        }
+      }
+      x.clearRect(0, 0, w, h);
+      x.lineWidth = dpr;
+      for (i = 0; i < pts.length; i++){
+        var a = pts[i];
+        for (j = i + 1; j < pts.length; j++){
+          var b = pts[j], dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
+          if (d2 < link * link){
+            var t = 1 - Math.sqrt(d2) / link;
+            x.strokeStyle = 'rgba(62,240,216,' + (t * .15).toFixed(3) + ')';
+            x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.stroke();
+          }
+        }
+      }
+      for (i = 0; i < pts.length; i++){
+        p = pts[i];
+        x.globalAlpha = p.a; x.fillStyle = '#9fe4ff';
+        x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill();
       }
       x.globalAlpha = 1;
     }
-    size(); draw();
-    addEventListener('resize', function(){ size(); draw(); }, {passive:true});
-    if (!reduced) addEventListener('scroll', function(){ requestAnimationFrame(draw); }, {passive:true});
+
+    function loop(){ draw(true); raf = requestAnimationFrame(loop); }
+    function start(){ if (!raf && !reduced) raf = requestAnimationFrame(loop); }
+    function stop(){ if (raf){ cancelAnimationFrame(raf); raf = 0; } }
+
+    size(); draw(false);
+    addEventListener('resize', function(){ size(); draw(false); }, {passive:true});
+    document.addEventListener('visibilitychange', function(){
+      if (document.hidden) stop(); else start();
+    });
+    start();
   })();
 
-  /* ---------- build corridor racks ---------- */
+  /* ---------- build the corridor of network cabinets ---------- */
   (function corridor(){
     var inner = document.getElementById('corridor-inner');
     if (!inner) return;
@@ -676,11 +903,11 @@ var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZ
 
   /* ---------- scroll progress per scene ---------- */
   var scenes = [].slice.call(document.querySelectorAll('.scene'));
-  var rackUnits = [].slice.call(document.querySelectorAll('.u-unit'));
+  var stackUnits = [].slice.call(document.querySelectorAll('.u-unit'));
   var sysLayers = [].slice.call(document.querySelectorAll('.sys-layer'));
   var rail = [].slice.call(document.querySelectorAll('#rail i'));
-  var load = document.getElementById('cnt-load');
-  var dt = document.getElementById('cnt-dt');
+  var layersOut = document.getElementById('cnt-layers');
+  var rpoOut = document.getElementById('cnt-rpo');
   var hdr = document.getElementById('hdr');
   var ticking = false;
 
@@ -698,14 +925,14 @@ var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZ
       s.style.setProperty('--p', p.toFixed(4));
 
       if (s.id === 's-rack'){
-        // reveal rack units progressively over the first 65% of the scene
-        var shown = Math.floor(clamp(p / .65) * (rackUnits.length + 1));
-        for (var u = 0; u < rackUnits.length; u++){
-          rackUnits[u].classList.toggle('in', u < shown);
+        // reveal the stack bottom-up over the first 65% of the scene
+        var shown = Math.floor(clamp(p / .65) * (stackUnits.length + 1));
+        for (var u = 0; u < stackUnits.length; u++){
+          stackUnits[u].classList.toggle('in', u < shown);
         }
         var k = clamp((p - .25) / .5);
-        if (load) load.textContent = (34.6 * k).toFixed(1) + ' kW';
-        if (dt) dt.textContent = Math.round(11 * k) + ' °C';
+        if (layersOut) layersOut.textContent = Math.round(9 * k) + ' / 9';
+        if (rpoOut) rpoOut.textContent = Math.round(15 * k) + ' min';
       }
 
       if (s.id === 's-systems'){
@@ -723,19 +950,11 @@ var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZ
     addEventListener('resize', onScroll, {passive:true});
     update();
   } else {
-    rackUnits.forEach(function(u){ u.classList.add('in'); });
+    stackUnits.forEach(function(u){ u.classList.add('in'); });
     sysLayers.forEach(function(l){ l.classList.add('on'); });
-    if (load) load.textContent = '34.6 kW';
-    if (dt) dt.textContent = '11 °C';
+    if (layersOut) layersOut.textContent = '9 / 9';
+    if (rpoOut) rpoOut.textContent = '15 min';
   }
-
-  /* ---------- power bars ---------- */
-  (function bars(){
-    var b = document.getElementById('bars'); if (!b) return;
-    var html = '';
-    for (var i = 0; i < 22; i++) html += '<i style="animation-delay:' + (i * .07).toFixed(2) + 's"></i>';
-    b.innerHTML = html;
-  })();
 
   /* ---------- reveal on enter ---------- */
   if ('IntersectionObserver' in window && !reduced){

@@ -1,22 +1,46 @@
 # nsqrai.com — NSQR AI
 
-Marketing site for **NSQR AI** (Nicolas Quiroz) — AI/GPU **physical infrastructure design
-and specification** for startups.
+Marketing site for **NSQR AI** (Nicolas Quiroz) — **IT systems, networks and websites for
+small business**.
 
 ## What the business does
-Consulting on the physical layer of GPU deployments: capacity planning, rack elevations,
-power and electrical (PDU/UPS, 3-phase, N+1 / 2N), thermal and airflow (containment,
-rear-door, DLC), network fabric (InfiniBand/RoCE, optics, per-cable lengths), and the
-bill of materials. Client hardware is **H200 / B200 class** (~10–14 kW per 8-GPU node).
-Engagements start with a discovery call. **No pricing on the site** — scoped per project.
-Remote worldwide; on-site travel possible, agreed per engagement.
+⚠️ **REPOSITIONED 2026-08-24.** The site used to sell only AI/GPU physical-infrastructure
+design to startups. It now sells the **full small-business IT stack**, and GPU work is one
+specialist card at the bottom of the services section — not the premise. Do not "restore"
+the old framing.
+
+**Audience: small and mid-size businesses**, roughly 3–100 people, no IT department — an
+office, clinic, shop, trades company or growing startup. The core pitch is *getting a small
+business online and keeping it running*. Copy is plain-English and outcome-led; technical
+specificity is the credibility layer underneath, never the lead.
+
+Nine services, in the order they appear on the page:
+1. Website & online presence (design/build/hosting, domain, DNS, TLS, business email, GBP/SEO)
+2. Internet & connectivity (ISP selection & sizing, static IP, LTE/5G failover)
+3. Networks & Wi-Fi (cabling, switching, survey/mesh, firewall, VLANs, VPN)
+4. Servers & storage (spec/build/deploy, NAS, RAID, virtualization, racks, UPS)
+5. Computers & devices (procurement, imaging, printers/POS, refresh planning)
+6. Cloud, email & files (M365 / Google Workspace, mailbox+file migration, access control)
+7. Backup & recovery (3-2-1, offsite, immutable snapshots, restore drills)
+8. Security (MFA, patching, endpoint protection, phishing awareness)
+9. Support & troubleshooting (remote & on-site, monitoring, root cause)
+
+Plus two wide panels: **Ongoing cover** (flat monthly managed-IT plan, cancel anytime) and
+**Specialist builds** (the surviving AI/GPU infrastructure work — H200/B200 class, 10–14 kW
+per node).
+
+Engagements start with a **free** discovery call. **No pricing numbers on the site** — but
+the *pricing model* is stated (fixed price per project, or a flat monthly plan, quoted
+before anything starts). Remote worldwide; on-site anywhere by arrangement.
+A standing promise in the About copy: **every account, licence and domain is registered in
+the client's name** — that is a deliberate anti-lock-in differentiator, keep it.
 
 🛑 **Do NOT add a background/credibility section** (years of experience, certifications,
 past employers, the upstation.io connection). The operator explicitly asked for it to be
 left out. Credibility is carried by technical specificity in the copy instead.
 
 ## Stack — deliberately minimal
-- **`index.html` is the entire site.** Single file, ~28 KB, **zero external requests**
+- **`index.html` is the entire site.** Single file, ~52 KB, **zero external requests**
   (no fonts, CDNs, images, or analytics). No build step, no framework, no dependencies.
 - Hosting: **GitHub Pages** from `main` at repo root — `moving-karma/nsqrai-site` (public).
   Any push to `main` republishes. Build takes ~40 s.
@@ -230,9 +254,32 @@ Check state with `bash scripts/check-creds.sh`, which prints status without valu
 `SQUARESPACE_API_KEY` is permanently unavailable — it needs a paid Squarespace plan,
 and even with one it only exposes commerce/forms data, never site content.
 
-## Design language
-Near-black (`#05070a`) with a faint engineering grid. Cyan `#3ef0d8` → amber `#ffb545`
-as a **cold-aisle/hot-aisle thermal metaphor**, not decoration. Monospace for anything
-that is a technical value; system sans for prose. The hero is a to-scale 42U rack
-elevation in inline SVG with animated airflow — it establishes competence before any
-copy is read. Respect `prefers-reduced-motion`.
+## Design language — retheme 2026-08-24
+Near-black (`#04050c`) with a faint engineering grid, **futuristic / HUD**. The old
+cyan→amber **cold-aisle/hot-aisle thermal metaphor is retired** with the GPU positioning.
+The accent pair is now **cyan `#3ef0d8` = live signal / uptime / on-prem**, **violet
+`#7c5cff` = cloud, identity and automation**; amber `#ffb545` is reserved for attention
+states only. Monospace for anything that is a technical value; system sans for prose.
+Respect `prefers-reduced-motion` — the whole scroll rig collapses to a plain stacked
+document (verified: 6,983 px tall, no overflow, all nine stack layers visible).
+
+Four sticky scroll scenes, in order:
+1. **Approach** — portal + `Get online. / Stay online.` + a capability chip rail.
+2. **Corridor** — 3D flythrough of two receding walls of network cabinets.
+3. **Stack** — inline SVG that assembles **bottom-up, L1→L9**: internet circuit → firewall
+   → switch → Wi-Fi → server/NAS → workstations → cloud & email → backup → website.
+   Colour-coded cyan (network) / neutral (compute) / violet (cloud) / bright cyan (the
+   public site). Counters animate `0/9 → 9/9` and `0 → 15 min`.
+4. **Systems** — three pillars: **Presence** (browser mockup w/ scan line), **Connectivity**
+   (node graph), **Continuity** (shield + verification rings).
+
+🪤 **`.rk` transform ORDER is load-bearing (fixed 2026-08-24).** The corridor walls were
+written `translateX() rotateY() translateZ()`, which applies `translateZ` in the
+*already-rotated* frame — every cabinet slid ~sin(68°)·z sideways off-screen and the scene
+rendered as an empty black tunnel at every viewport width. Correct order is **position
+first, rotate in place last**: `translateX() translateZ() rotateY()`. Corridor half-width
+is `--cw` on `.corridor` so it scales with the viewport.
+
+🪤 The background canvas (`#stars`) is a **drifting network constellation**, not the old
+starfield: nodes drift and draw links under ~150 px. One rAF loop over ≤90 nodes, and it
+**stops on `visibilitychange`** so a backgrounded tab costs nothing.
