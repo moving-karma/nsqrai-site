@@ -120,20 +120,49 @@ nav{
 .scene{position:relative}
 .stage{position:sticky;top:0;height:100vh;overflow:hidden;display:grid;place-items:center}
 
-/* --- Scene 1: approach --- */
-#s-approach{height:240vh}
+/* --- Scene 1: approach ---
+   TIMING IS THE WHOLE POINT HERE. The portal used to finish opening onto an
+   EMPTY frame: the hero copy was gone by p≈0.67, the doorway was at its MOST
+   visible exactly when it framed nothing, and #symptoms could not appear until
+   the sticky scene released — so there was a dead beat of blank screen. Now the
+   hero copy clears by p=0.5, `.approach-next` crossfades in from p=0.42, and the
+   doorway dissolves once you are through it. Something is always on screen.
+   If you retime any of these three, retime all three together. */
+#s-approach{height:280vh}
 .approach-copy{
   text-align:center;position:relative;z-index:3;padding:0 24px;
-  transform:translate3d(0,calc(var(--p,0) * -14vh),0) scale(calc(1 - var(--p,0) * .12));
-  opacity:calc(1 - var(--p,0) * 1.5);
+  /* Travel is a PERCENTAGE OF THIS BLOCK'S OWN HEIGHT, deliberately not vh.
+     During the crossfade this block has to clear the viewport top or it lands
+     on the incoming copy — and it is 350–430px tall depending on how the lede
+     and chips wrap, which on a 620px-tall window is 69% of the viewport. Any
+     vh figure that clears it at 800px fails at 620px. -130% always clears. */
+  transform:translate3d(0,calc(var(--p,0) * -130%),0) scale(calc(1 - var(--p,0) * .14));
+  opacity:calc(1 - var(--p,0) * 1.45);
 }
+/* The beat that arrives through the portal as the hero copy leaves.
+   The two fades OVERLAP heavily (copy out over p 0→.69, this in over p .22→.62)
+   so neither is ever near-invisible at the same time — a narrow crossfade dipped
+   to 0.10/0.10 and read as a blank screen. They also separate vertically while
+   they cross: the copy lifts away, this rises from 40vh below. Motion in
+   opposite directions is what keeps a 45%/45% dissolve legible instead of mushy. */
+.approach-next{
+  --t:calc(min(max(0, var(--p,0) - .22) * 2.5, 1)); /* 0 → 1 across p .22 → .62 */
+  position:absolute;left:0;right:0;top:50%;z-index:3;
+  text-align:center;padding:0 24px;pointer-events:none;
+  opacity:var(--t);
+  transform:translateY(calc(-50% + (1 - var(--t)) * 40vh)) scale(calc(.9 + var(--t) * .1));
+}
+.approach-next h2{font-size:clamp(1.55rem,3.6vw,2.8rem)}
+.approach-next .lede{margin:16px auto 0;text-align:center}
 .doorway{
   position:absolute;left:50%;top:50%;z-index:1;
   width:min(46vw,420px);aspect-ratio:3/4;
   transform:translate(-50%,-50%) scale(calc(.55 + var(--p,0) * 5.2));
   border:1px solid rgba(62,240,216,.5);border-radius:6px;
   box-shadow:0 0 90px rgba(62,240,216,.18),inset 0 0 90px rgba(62,240,216,.09);
-  opacity:calc(.25 + var(--p,0) * .75);
+  /* rises to full by p=.45, then dissolves to 0 by p=1 — you pass THROUGH it,
+     rather than being left staring at a giant empty rectangle. */
+  opacity:calc((.3 + min(var(--p,0),.45) * 1.55) * (1 - max(0, var(--p,0) - .72) * 3.6));
 }
 .doorway::after{
   content:"";position:absolute;inset:0;
@@ -374,6 +403,8 @@ footer a:hover{color:var(--cyan)}
   .stage{position:relative;height:auto;padding:80px 0}
   .doorway{display:none}
   .u-unit,.rv{opacity:1!important;transform:none!important}
+  /* .approach-next is opacity-0 until --p climbs, and --p never moves here */
+  .approach-next{position:relative;top:auto;margin-top:56px;opacity:1!important;transform:none!important}
 }
 </style>
 </head>
@@ -415,6 +446,13 @@ footer a:hover{color:var(--cyan)}
         <span>Security</span><span>Support</span>
       </div>
     </div>
+    <div class="approach-next">
+      <p class="eyebrow" style="justify-content:center">What actually runs your business</p>
+      <h2 class="grad">Most of it, you never see.</h2>
+      <p class="lede">The website, the Wi-Fi, the line into the building, the box in the
+         closet — one system. Get one layer wrong and everything above it feels slow,
+         flaky or broken.</p>
+    </div>
     <div class="scroll-hint">SCROLL TO ENTER<span></span></div>
   </div>
 </section>
@@ -424,9 +462,9 @@ footer a:hover{color:var(--cyan)}
   <div class="wrap">
     <div class="sec-head rv">
       <p class="eyebrow">Sound familiar?</p>
-      <h2 class="grad">Most of it you never see — until it breaks.</h2>
-      <p>These are the calls I get most. If two or more of them describe your month, it
-         isn't bad luck — it's that nobody owns the whole system.</p>
+      <h2 class="grad">The six calls I get most.</h2>
+      <p>If two or more of them describe your month, it isn't bad luck — it's that
+         nobody owns the whole system.</p>
     </div>
     <div class="diag">
       <div class="sym rv"><i class="dot"></i><div>

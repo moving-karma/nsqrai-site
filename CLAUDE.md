@@ -264,7 +264,8 @@ Respect `prefers-reduced-motion` — the whole scroll rig collapses to a plain s
 document (verified: 6,983 px tall, no overflow, all nine stack layers visible).
 
 Page order — **only two sticky scroll scenes**, everything else is a normal section:
-1. `#s-approach` (**scene**, 240vh) — portal + `Get online. / Stay online.` + chip rail.
+1. `#s-approach` (**scene**, 280vh) — portal + `Get online. / Stay online.` + chip rail,
+   which then **crossfades into `.approach-next`** (*"Most of it, you never see."*).
 2. `#symptoms` — the **diagnostics band**: six "sound familiar?" symptoms, each an amber
    (or red, `nth-child(3n)`) status dot + the real diagnosis in mono. Dot goes cyan on
    hover. This is the highest-converting block on the page for the SMB audience.
@@ -291,10 +292,32 @@ Page order — **only two sticky scroll scenes**, everything else is a normal se
   swapping over 360vh behind a progress rail, so seeing all three cost three scroll pushes
   and you could never compare them. Now one row, one beat.
 
-📉 Net effect: the page went **14,868 px → 10,142 px** at 1280×800 (−32%), and 7,182 px
-under `prefers-reduced-motion`. Scene scroll dropped from 1,500vh to 540vh. Keep it that
+📉 Net effect: the page went **14,868 px → ~10,500 px** at 1280×800 (−30%), and ~7,350 px
+under `prefers-reduced-motion`. Scene scroll dropped from 1,500vh to 580vh. Keep it that
 way — this audience will not scroll through five screens of animation to find out what
 the business does.
+
+🪤 **THE HERO CROSSFADE IS TUNED, NOT ARBITRARY (2026-08-24, third pass).** The portal used
+to finish opening onto an **empty frame**: hero copy gone by p≈0.67, doorway at its *most*
+visible exactly when it framed nothing, and `#symptoms` unable to appear until the sticky
+scene released. Operator: *"there is one point where everything is clear, it should not be
+like that."* Three interlocking fixes — **retime any one and you must retime all three**:
+- `.approach-copy` fades over p `0 → .69` (`1 - p*1.45`); `.approach-next` fades in over
+  p `.22 → .62`. The overlap is wide **on purpose**. A narrow crossfade put both elements
+  at **0.10 opacity** simultaneously — measured — which is what read as blank. The floor is
+  now **0.45**.
+- They must **separate vertically while they cross**, or a 45%/45% dissolve is just mush
+  (this was tried and screenshotted). Copy lifts away, `.approach-next` rises from 40vh below.
+- 🪤 **Copy travel is `-130%` (percentage of its OWN height), never `vh`.** The block is
+  350–430 px depending on lede/chip wrapping — on a 620 px-tall window that is 69% of the
+  viewport, so every `vh` value that cleared at 800 px collided at 620 px. Verified at
+  1280×800, 1280×620 and 375×812: **0 blank frames, 0 collisions, floor 0.45** across 41
+  sample points each.
+- The doorway now peaks at p=.45 and **dissolves to 0 by p=1** — you pass *through* it
+  instead of being left staring at a giant empty rectangle.
+- `.approach-next` is opacity-0 until `--p` climbs, and `--p` never moves under reduced
+  motion, so that media block **must** keep the `position:relative` + `opacity:1!important`
+  override or the beat vanishes entirely for those users.
 
 🪤 The background canvas (`#stars`) is a **drifting network constellation**, not the old
 starfield: nodes drift and draw links under ~150 px. One rAF loop over ≤90 nodes, and it
