@@ -32,8 +32,10 @@ per node), which links down to `#gpu`.
 **GPU servers as an investment — own section `#gpu` (added 2026-10-22).** A different
 audience from the SMB pitch: people/businesses buying GPU servers (8× RTX PRO 6000, H100,
 H200 class) who want the hardware working. Nicolas sources the server, finds cheap-power
-colocation, lists it on GPU rental marketplaces or finds other revenue. Laid out as a
-Source → Colocate → List → Earn pipeline + three notes + its own CTA. Sits between
+colocation, lists it on GPU rental marketplaces or finds other revenue. Headline
+*"Enterprise GPUs, without being an enterprise."* (his ask: an intro saying it's easy to get
+into enterprise-grade hardware), then a five-step timeline **Call → Pick → Colocate → List →
+Earn** (his order), three notes and its own CTA. Sits between
 `#services` and `#process`; has a nav link.
 🛑 **Never promise a tax break or a return on the site.** The tax line says depreciation
 *can* apply and that it's the client's CPA's call; "No promised returns" says rental income

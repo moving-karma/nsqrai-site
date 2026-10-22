@@ -358,7 +358,7 @@ section.content::before{
 /* GPU servers: a left-to-right pipeline, purchase to payout */
 .panel-link{display:inline-block;margin-top:18px;font-size:.88rem;color:var(--cyan);text-decoration:none;position:relative;z-index:1}
 .panel-link:hover{text-decoration:underline;text-underline-offset:4px}
-.pipe{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:28px;position:relative}
+.pipe{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:24px;position:relative}
 .pipe::before{
   content:"";position:absolute;top:5px;left:6px;right:6px;height:1px;
   background:linear-gradient(90deg,var(--cyan),var(--violet));opacity:.55;
@@ -368,17 +368,19 @@ section.content::before{
   content:"";position:absolute;top:0;left:0;width:11px;height:11px;border-radius:50%;
   background:var(--bg);border:1.5px solid var(--cyan);box-shadow:0 0 0 4px var(--bg);
 }
-.pipe li:nth-child(n+3)::before{border-color:var(--violet)}
+.pipe li:nth-child(n+4)::before{border-color:var(--violet)}
 .pipe-k{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
-.pipe li:nth-child(n+3) .pipe-k{color:#8a6dff}
+.pipe li:nth-child(n+4) .pipe-k{color:#8a6dff}
 .pipe h3{font-size:1.02rem;margin-bottom:9px}
 .pipe p{color:var(--muted);font-size:.9rem;margin:0}
-@media(max-width:860px){
+@media(max-width:1060px){
   .pipe{grid-template-columns:1fr;gap:26px;padding-left:28px}
   .pipe::before{top:6px;bottom:6px;left:5px;right:auto;width:1px;height:auto;background:linear-gradient(180deg,var(--cyan),var(--violet))}
   .pipe li{padding-top:0}
   .pipe li::before{left:-28px;top:4px}
 }
+#gpu .sec-head{max-width:none}
+#gpu .sec-head p{max-width:64ch}
 .gpu-notes{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:52px;padding-top:30px;border-top:1px solid var(--line-2)}
 @media(max-width:860px){.gpu-notes{grid-template-columns:1fr;gap:22px}}
 .gpu-notes h3{font-size:.98rem;margin-bottom:7px}
@@ -795,24 +797,28 @@ html{scrollbar-color:#232c47 #04050c}
   <div class="wrap">
     <div class="sec-head rv">
       <p class="eyebrow">GPU servers</p>
-      <h2 class="grad">Own the hardware.<br>Let it earn.</h2>
-      <p>For businesses and individuals buying GPU servers as an investment. I handle
-         everything between the purchase and the payout, so the machine works instead
-         of sitting in a box.</p>
+      <h2 class="grad">Enterprise GPUs,<br>without being an enterprise.</h2>
+      <p>The same servers the big AI companies run used to take a data-center team to
+         own. I make it a few steps: one call, you pick the server, I find it a home with
+         cheap power and get it renting out. You own the hardware; I handle everything
+         between the purchase and the payout.</p>
     </div>
     <ol class="pipe">
-      <li class="rv"><span class="pipe-k">Source</span><h3>The right server for the money</h3>
-        <p>8× RTX PRO 6000, H100 or H200 class. I compare vendors and configurations
-           against what they actually rent for, then handle the order.</p></li>
-      <li class="rv"><span class="pipe-k">Colocate</span><h3>Cheap power, proper home</h3>
-        <p>I find a data center with low power rates and the space and cooling the
-           server needs, then get it racked and networked.</p></li>
-      <li class="rv"><span class="pipe-k">List</span><h3>On the rental marketplaces</h3>
+      <li class="rv"><span class="pipe-k">Call</span><h3>Free call</h3>
+        <p>We talk budget, goals and how hands-off you want to be. No charge and no
+           pressure to buy.</p></li>
+      <li class="rv"><span class="pipe-k">Pick</span><h3>You pick the server</h3>
+        <p>I lay out the options (8× RTX PRO 6000, H100 or H200 class) with what each
+           costs and realistically rents for. You choose; I handle the order.</p></li>
+      <li class="rv"><span class="pipe-k">Colocate</span><h3>I find it a home</h3>
+        <p>A data center with low power rates and the space and cooling the server
+           needs. Racked, networked and online.</p></li>
+      <li class="rv"><span class="pipe-k">List</span><h3>It goes on the market</h3>
         <p>Listed on GPU rental platforms, priced against the market and kept online,
-           so renters find it and keep coming back.</p></li>
-      <li class="rv"><span class="pipe-k">Earn</span><h3>Or other revenue</h3>
-        <p>When a marketplace isn't the best use, I look for other ways to put it to
-           work: direct rental to a team that needs compute, or other workloads.</p></li>
+           so renters find it and come back.</p></li>
+      <li class="rv"><span class="pipe-k">Earn</span><h3>It earns</h3>
+        <p>Rental income, or other revenue where a marketplace isn't the best use:
+           direct rental to a team that needs compute, or other workloads.</p></li>
     </ol>
     <div class="gpu-notes">
       <div class="rv"><h3>In your name</h3>
