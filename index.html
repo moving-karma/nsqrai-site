@@ -14,7 +14,7 @@
   --line-2:#232c47;
   --text:#e9edf7;
   --muted:#8b9ab8;
-  --dim:#5a6a8a;
+  --dim:#717fa0; /* was #5a6a8a = 3.7:1 on --bg; this clears 4.5:1 on --bg and --panel */
   --cyan:#3ef0d8;
   --violet:#7c5cff;
   --amber:#ffb545;
@@ -85,6 +85,7 @@ nav{
 .nav-links{display:flex;gap:26px;align-items:center}
 .nav-links a{text-decoration:none;font-size:.88rem;color:var(--muted);transition:color .18s}
 .nav-links a:hover{color:var(--text)}
+.nav-links a.btn,.nav-links a.btn:hover{color:#03110f}
 /* Mobile: hide the in-page anchors only. They are reachable by scrolling, so
    losing them costs nothing — but /pay.html is a SEPARATE PAGE, and hiding it
    made billing unreachable on a phone. Never collapse a cross-page link here. */
@@ -335,7 +336,7 @@ section.content::before{
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
   background:radial-gradient(ellipse 70% 100% at 100% 0%,rgba(124,92,255,.16),transparent 60%);
 }
-.panel .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--violet);margin-bottom:14px}
+.panel .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:#8a6dff;margin-bottom:14px}
 .panel h3{font-size:1.3rem;margin-bottom:10px}
 .panel p{color:var(--muted);font-size:.94rem;margin:0}
 .panel ul{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
@@ -393,6 +394,20 @@ footer{border-top:1px solid var(--line);padding:40px 0;color:var(--dim);font-siz
 footer a{color:var(--muted);text-decoration:none}
 footer a:hover{color:var(--cyan)}
 
+/* ---------- live stack (preview) ---------- */
+.doorway{display:none} /* the 3D stack replaces the portal */
+.hud{
+  position:fixed;left:28px;bottom:26px;z-index:3;pointer-events:none;
+  font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;line-height:2;color:var(--muted);
+  transition:opacity .3s;
+}
+.approach-copy .lede,.approach-next .lede{text-shadow:0 1px 14px #04050c,0 0 2px #04050c}
+.hud b{font-weight:400;color:var(--cyan);font-variant-numeric:tabular-nums}
+@media(max-width:700px){.hud{display:none}}
+::selection{background:rgba(62,240,216,.28);color:#fff}
+html{scrollbar-color:#232c47 #04050c}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
 /* reveal on enter */
 .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
 .rv.in{opacity:1;transform:none}
@@ -401,7 +416,7 @@ footer a:hover{color:var(--cyan)}
   *{animation:none!important;transition:none!important}
   .scene{height:auto!important}
   .stage{position:relative;height:auto;padding:80px 0}
-  .doorway{display:none}
+  .doorway,.hud{display:none}
   .u-unit,.rv{opacity:1!important;transform:none!important}
   /* .approach-next is opacity-0 until --p climbs, and --p never moves here */
   .approach-next{position:relative;top:auto;margin-top:56px;opacity:1!important;transform:none!important}
@@ -413,6 +428,11 @@ footer a:hover{color:var(--cyan)}
 <canvas id="stars"></canvas>
 <div class="vignette"></div>
 <div class="grain"></div>
+<div class="hud" id="hud" aria-hidden="true">
+  <div>STACK <b>09/09</b> LAYERS</div>
+  <div>IN TRANSIT <b id="hud-pulse">00</b></div>
+  <div>YAW <b id="hud-yaw">000.0°</b></div>
+</div>
 
 <header id="hdr">
   <nav>
@@ -834,75 +854,197 @@ footer a:hover{color:var(--cyan)}
 </footer>
 
 <script>
-var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZNJNqVRLyWlvfd1ghhBsEsJPA0D3vXnoqGdWCBCPUaDFOk_7H1/exec"; // Apps Script /exec URL
+var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZNJNqVRLyWlvfd1ghhBsEsJPA0D3vXnoqGdWCBCPUaDFOk_7H1/exec"; // Apps Script /exec URL // Apps Script /exec URL
 
 (function () {
   'use strict';
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- background: a drifting network constellation ----------
-     Replaces the old starfield. Nodes drift and link when they get close,
-     which is the site's subject matter rather than decoration. Costs one
-     rAF loop over ~90 nodes; paused whenever the tab is hidden. */
-  (function net(){
+  /* ---------- background: the live system stack ----------
+     The nine layers the business looks after (L1 internet circuit -> L9
+     website) drawn as a real-time 3D stack behind the page. In the hero it
+     sits compact and slowly turning; as the approach scene plays it pulls its
+     layers apart and labels them, and data pulses climb from the line in the
+     wall to the website. Once the hero releases it settles to the side as
+     ambient. Plain Canvas 2D with a hand-rolled projection: no WebGL context,
+     no library, one rAF loop, paused when the tab is hidden. Under reduced
+     motion it draws a single still frame and never animates. */
+  var stackState = {p: 0, after: 0};
+  (function stack(){
     var c = document.getElementById('stars'); if (!c) return;
     var x = c.getContext('2d');
+    var hud = document.getElementById('hud');
+    var hudYaw = document.getElementById('hud-yaw');
+    var hudPulse = document.getElementById('hud-pulse');
     var dpr = Math.min(devicePixelRatio || 1, 2);
-    var pts = [], w = 0, h = 0, link = 0, raf = 0;
+    var w = 0, h = 0, S = 0, raf = 0, last = 0, clock = 0, spawn = 0;
+    var tilt = {x: 0, y: 0}, aim = {x: 0, y: 0};
+    var CY = '62,240,216', VI = '124,92,255', NE = '170,184,214', WEB = '140,255,236';
+    var LAYERS = [
+      ['L1', 'INTERNET', CY], ['L2', 'FIREWALL', CY], ['L3', 'SWITCHING', CY],
+      ['L4', 'WI-FI', CY], ['L5', 'SERVERS', NE], ['L6', 'WORKSTATIONS', NE],
+      ['L7', 'CLOUD & EMAIL', VI], ['L8', 'BACKUP', VI], ['L9', 'WEBSITE', WEB]
+    ];
+    var flash = LAYERS.map(function(){ return 0; });
+    var pulses = [], dust = [];
+    for (var i = 0; i < 70; i++){
+      var th = Math.random() * 6.283, ph = Math.acos(Math.random() * 2 - 1);
+      dust.push({x: Math.sin(ph) * Math.cos(th), y: Math.cos(ph), z: Math.sin(ph) * Math.sin(th),
+                 a: Math.random() * .35 + .12});
+    }
 
     function size(){
       w = c.width = innerWidth * dpr;
       h = c.height = innerHeight * dpr;
       c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
-      link = Math.min(150, innerWidth / 9) * dpr;
-      var n = Math.max(28, Math.min(90, Math.round(innerWidth * innerHeight / 16000)));
-      pts = [];
-      for (var i = 0; i < n; i++) pts.push({
-        x: Math.random() * w, y: Math.random() * h,
-        vx: (Math.random() - .5) * .17 * dpr,
-        vy: (Math.random() - .5) * .17 * dpr,
-        r: (Math.random() * 1.2 + .5) * dpr,
-        a: Math.random() * .4 + .22
-      });
+      S = innerWidth < 600 ? Math.min(w * 1.25, h * .9) : Math.min(w, h * 1.25);
     }
+    function ease(v){ v = v < 0 ? 0 : v > 1 ? 1 : v; return v * v * (3 - 2 * v); }
+    function mix(a, b, t){ return a + (b - a) * t; }
 
-    function draw(move){
-      var i, j, p;
-      if (move) {
-        for (i = 0; i < pts.length; i++){
-          p = pts[i];
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < 0) p.x += w; else if (p.x > w) p.x -= w;
-          if (p.y < 0) p.y += h; else if (p.y > h) p.y -= h;
-        }
+    function draw(dt){
+      var e = ease((stackState.p - .12) / .5);           // explode across the hero scene
+      var af = ease(stackState.after);                    // 0 in the hero, 1 once past it
+      var gone = ease(stackState.after * 3);              // labels + HUD clear early in the hand-off
+      var wide = innerWidth > 900;
+      var cx = mix(w * .5, wide ? w * .8 : w * .5, af);
+      var cy = mix(innerWidth < 600 ? h * .86 : h * .58, h * .5, e);
+      var scl = mix(1, 1.04, e) * mix(1, wide ? .56 : .7, af);
+      var A = mix(mix(.62, .9, e), 0, af);               // global strength; gone once the page takes over
+      var labA = e * (1 - gone);
+      if (hud) hud.style.opacity = (1 - gone).toFixed(3);
+
+      clock += dt;
+      tilt.x += (aim.x - tilt.x) * .05; tilt.y += (aim.y - tilt.y) * .05;
+      var yaw = .62 + clock * .16 + tilt.x * .55;
+      var pitch = .44 + tilt.y * .2;
+      var cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+      var D = 2.6 * S, F = 1.9 * S * scl;
+
+      function P(px, py, pz){
+        var X = px * cyw + pz * syw, Z = -px * syw + pz * cyw;
+        var Y = py * cp + Z * sp; Z = -py * sp + Z * cp;
+        var k = F / (Z + D);
+        return [cx + X * k, cy - Y * k, Z];
       }
+
       x.clearRect(0, 0, w, h);
-      x.lineWidth = dpr;
-      for (i = 0; i < pts.length; i++){
-        var a = pts[i];
-        for (j = i + 1; j < pts.length; j++){
-          var b = pts[j], dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
-          if (d2 < link * link){
-            var t = 1 - Math.sqrt(d2) / link;
-            x.strokeStyle = 'rgba(62,240,216,' + (t * .15).toFixed(3) + ')';
-            x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.stroke();
-          }
-        }
-      }
-      for (i = 0; i < pts.length; i++){
-        p = pts[i];
-        x.globalAlpha = p.a; x.fillStyle = '#9fe4ff';
-        x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill();
+
+      // depth dust: a slow shell of points turning at a fraction of the yaw
+      var dy = yaw * .35, dc = Math.cos(dy), ds = Math.sin(dy), R = 1.9 * S;
+      x.fillStyle = '#9fe4ff';
+      for (var d = 0; d < dust.length; d++){
+        var q = dust[d], qx = q.x * dc + q.z * ds, qz = -q.x * ds + q.z * dc;
+        var kk = 1.9 * S / (qz * R + D * 1.4);
+        x.globalAlpha = q.a * (qz < 0 ? 1 : .5);
+        x.fillRect(w * .5 + qx * R * kk, h * .5 - q.y * R * kk, dpr * 1.2, dpr * 1.2);
       }
       x.globalAlpha = 1;
+
+      if (A < .01) return;
+      var a = .3 * S, n = LAYERS.length;
+      var gap = S * mix(.042, .084, e) * Math.min(1, h / (S * .95));
+      var y0 = -gap * (n - 1) / 2, y1 = -y0;
+      var corners = [[-a, -a], [a, -a], [a, a], [-a, a]];
+
+      // risers through the corners
+      x.lineWidth = dpr; x.setLineDash([2 * dpr, 6 * dpr]);
+      x.strokeStyle = 'rgba(' + NE + ',' + (.14 * A).toFixed(3) + ')';
+      corners.forEach(function(cr){
+        var p0 = P(cr[0], y0, cr[1]), p1 = P(cr[0], y1, cr[1]);
+        x.beginPath(); x.moveTo(p0[0], p0[1]); x.lineTo(p1[0], p1[1]); x.stroke();
+      });
+      x.setLineDash([]);
+
+      // pulses: data climbing from the line in the wall to the website
+      if (dt > 0){
+        spawn -= dt;
+        if (spawn <= 0 && pulses.length < 9){
+          pulses.push({s: 0, v: .22 + Math.random() * .16, c: Math.random() * 5 | 0, last: -1});
+          spawn = .38 + Math.random() * .35;
+        }
+      }
+      for (var u = pulses.length - 1; u >= 0; u--){
+        var pu = pulses[u];
+        pu.s += pu.v * dt;
+        var lvl = Math.floor(pu.s * (n - 1) + .001);
+        if (lvl !== pu.last && lvl >= 0 && lvl < n){ flash[lvl] = 1; pu.last = lvl; }
+        if (pu.s >= 1){ pulses.splice(u, 1); }
+      }
+
+      for (var L = 0; L < n; L++){
+        var y = y0 + gap * L, s = L === n - 1 ? .82 : 1, col = LAYERS[L][2];
+        var c0 = P(-a * s, y, -a * s), c1 = P(a * s, y, -a * s), c2 = P(a * s, y, a * s), c3 = P(-a * s, y, a * s);
+        var f = flash[L]; flash[L] *= Math.pow(.04, dt || 0);
+
+        x.beginPath(); x.moveTo(c0[0], c0[1]); x.lineTo(c1[0], c1[1]); x.lineTo(c2[0], c2[1]); x.lineTo(c3[0], c3[1]); x.closePath();
+        x.fillStyle = 'rgba(6,8,18,' + (.62 * Math.min(1, A + .2)).toFixed(3) + ')'; x.fill();
+        x.fillStyle = 'rgba(' + col + ',' + ((.035 + f * .07) * A).toFixed(3) + ')'; x.fill();
+        x.lineWidth = dpr * (1 + f * .6);
+        x.strokeStyle = 'rgba(' + col + ',' + ((.42 + f * .5) * A).toFixed(3) + ')'; x.stroke();
+
+        // tray grid
+        x.lineWidth = dpr * .8;
+        x.strokeStyle = 'rgba(' + col + ',' + (.1 * A).toFixed(3) + ')';
+        x.beginPath();
+        for (var g = 1; g < 4; g++){
+          var t = -a * s + a * s * 2 * g / 4;
+          var g0 = P(t, y, -a * s), g1 = P(t, y, a * s), g2 = P(-a * s, y, t), g3 = P(a * s, y, t);
+          x.moveTo(g0[0], g0[1]); x.lineTo(g1[0], g1[1]); x.moveTo(g2[0], g2[1]); x.lineTo(g3[0], g3[1]);
+        }
+        x.stroke();
+
+        // label off the right-most corner
+        if (labA > .02 && innerWidth > 600){
+          var rc = [c0, c1, c2, c3].reduce(function(m, v){ return v[0] > m[0] ? v : m; });
+          x.globalAlpha = labA;
+          x.strokeStyle = 'rgba(' + col + ',.35)'; x.lineWidth = dpr;
+          x.beginPath(); x.moveTo(rc[0] + 6 * dpr, rc[1]); x.lineTo(rc[0] + 26 * dpr, rc[1]); x.stroke();
+          x.font = (10.5 * dpr) + 'px ' + 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
+          x.textBaseline = 'middle';
+          x.fillStyle = 'rgba(' + col + ',.95)'; x.fillText(LAYERS[L][0], rc[0] + 32 * dpr, rc[1]);
+          x.fillStyle = 'rgba(200,210,232,.82)'; x.fillText(LAYERS[L][1], rc[0] + 56 * dpr, rc[1]);
+          x.globalAlpha = 1;
+        }
+      }
+
+      // pulses drawn last so they read on top of the trays
+      for (var v = 0; v < pulses.length; v++){
+        var pv = pulses[v], cc = pv.c < 4 ? corners[pv.c] : [0, 0];
+        var pp = P(cc[0], y0 + (y1 - y0) * pv.s, cc[1]);
+        var hue = pv.s > .62 ? VI : CY;
+        var fade = Math.min(1, pv.s * 8, (1 - pv.s) * 8) * A;
+        var gr = x.createRadialGradient(pp[0], pp[1], 0, pp[0], pp[1], 9 * dpr);
+        gr.addColorStop(0, 'rgba(' + hue + ',' + (.9 * fade).toFixed(3) + ')');
+        gr.addColorStop(1, 'rgba(' + hue + ',0)');
+        x.fillStyle = gr; x.fillRect(pp[0] - 9 * dpr, pp[1] - 9 * dpr, 18 * dpr, 18 * dpr);
+        x.fillStyle = 'rgba(235,255,252,' + fade.toFixed(3) + ')';
+        x.fillRect(pp[0] - dpr, pp[1] - dpr, 2 * dpr, 2 * dpr);
+      }
+
+      if (hud){
+        var deg = ((yaw * 57.2958) % 360 + 360) % 360;
+        if (hudYaw) hudYaw.textContent = ('00' + deg.toFixed(1)).slice(-5) + '°';
+        if (hudPulse) hudPulse.textContent = ('0' + pulses.length).slice(-2);
+      }
     }
 
-    function loop(){ draw(true); raf = requestAnimationFrame(loop); }
-    function start(){ if (!raf && !reduced) raf = requestAnimationFrame(loop); }
+    function loop(now){
+      var dt = last ? Math.min(.05, (now - last) / 1000) : 0;
+      last = now; draw(dt);
+      raf = requestAnimationFrame(loop);
+    }
+    function start(){ if (!raf && !reduced){ last = 0; raf = requestAnimationFrame(loop); } }
     function stop(){ if (raf){ cancelAnimationFrame(raf); raf = 0; } }
 
-    size(); draw(false);
-    addEventListener('resize', function(){ size(); draw(false); }, {passive:true});
+    size();
+    if (reduced){ stackState.p = .6; stackState.after = .3; }
+    draw(0);
+    addEventListener('resize', function(){ size(); draw(0); }, {passive:true});
+    addEventListener('pointermove', function(ev){
+      if (ev.pointerType !== 'mouse') return;
+      aim.x = ev.clientX / innerWidth - .5; aim.y = ev.clientY / innerHeight - .5;
+    }, {passive:true});
     document.addEventListener('visibilitychange', function(){
       if (document.hidden) stop(); else start();
     });
@@ -929,6 +1071,10 @@ var LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyqPEHJ13gvctfRJiZ
       var total = r.height - vh;
       var p = total > 0 ? clamp(-r.top / total) : 0;
       s.style.setProperty('--p', p.toFixed(4));
+      if (s.id === 's-approach'){
+        stackState.p = p;
+        stackState.after = clamp((vh - r.bottom) / (vh * .7));
+      }
 
       if (s.id === 's-rack'){
         // reveal the stack bottom-up over the first 65% of the scene

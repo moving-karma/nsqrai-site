@@ -264,8 +264,9 @@ Respect `prefers-reduced-motion` — the whole scroll rig collapses to a plain s
 document (verified: 6,983 px tall, no overflow, all nine stack layers visible).
 
 Page order — **only two sticky scroll scenes**, everything else is a normal section:
-1. `#s-approach` (**scene**, 280vh) — portal + `Get online. / Stay online.` + chip rail,
-   which then **crossfades into `.approach-next`** (*"Most of it, you never see."*).
+1. `#s-approach` (**scene**, 280vh) — live 3D stack + `Get online. / Stay online.` + chip
+   rail, which then **crossfades into `.approach-next`** (*"Most of it, you never see."*)
+   while the stack pulls its nine layers apart and labels them.
 2. `#symptoms` — the **diagnostics band**: six "sound familiar?" symptoms, each an amber
    (or red, `nth-child(3n)`) status dot + the real diagnosis in mono. Dot goes cyan on
    hover. This is the highest-converting block on the page for the SMB audience.
@@ -319,6 +320,17 @@ like that."* Three interlocking fixes — **retime any one and you must retime a
   motion, so that media block **must** keep the `position:relative` + `opacity:1!important`
   override or the beat vanishes entirely for those users.
 
-🪤 The background canvas (`#stars`) is a **drifting network constellation**, not the old
-starfield: nodes drift and draw links under ~150 px. One rAF loop over ≤90 nodes, and it
-**stops on `visibilitychange`** so a backgrounded tab costs nothing.
+🪤 **The background canvas (`#stars`) is the LIVE SYSTEM STACK (2026-10-22)** — it replaced
+the drifting constellation, and the `.doorway` portal is retired (`display:none`). Nine
+wireframe trays L1 Internet → L9 Website, same colour coding as the rack scene, drawn with a
+hand-rolled 3D projection in **Canvas 2D** (no WebGL, no library). It turns slowly, tilts
+toward the mouse, and data pulses climb L1→L9 flashing each tray. Driven by
+`stackState.p` (= `#s-approach`'s `--p`): explodes + labels over p ≈ .12→.62, then
+`stackState.after` fades it to **zero** once the hero releases — it must not sit behind
+`#s-rack`, which draws the same stack in 2D. The fixed bottom-left `.hud` shows only the
+drawing's own values (layers, pulses, yaw) — **never fake uptime/latency stats**. Phones
+(<600 px) start it low, under the chips. Reduced motion: one still frame, no loop. Stops on
+`visibilitychange`.
+🪤 `.nav-links a` out-specifies `.btn`, which rendered the nav CTA label grey on cyan
+(2.0:1) — `.nav-links a.btn` pins it to `#03110f`. `--dim` is `#717fa0` (was `#5a6a8a`,
+3.7:1); it carries real text (diagnoses, lists, labels, footer), so keep it ≥4.5:1.
