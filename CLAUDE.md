@@ -27,7 +27,17 @@ Nine services, in the order they appear on the page:
 
 Plus two wide panels: **Ongoing cover** (flat monthly managed-IT plan, cancel anytime) and
 **Specialist builds** (the surviving AI/GPU infrastructure work — H200/B200 class, 10–14 kW
-per node).
+per node), which links down to `#gpu`.
+
+**GPU servers as an investment — own section `#gpu` (added 2026-10-22).** A different
+audience from the SMB pitch: people/businesses buying GPU servers (8× RTX PRO 6000, H100,
+H200 class) who want the hardware working. Nicolas sources the server, finds cheap-power
+colocation, lists it on GPU rental marketplaces or finds other revenue. Laid out as a
+Source → Colocate → List → Earn pipeline + three notes + its own CTA. Sits between
+`#services` and `#process`; has a nav link.
+🛑 **Never promise a tax break or a return on the site.** The tax line says depreciation
+*can* apply and that it's the client's CPA's call; "No promised returns" says rental income
+moves with demand. Keep both — a public promise of tax savings or yield is a liability.
 
 Engagements start with a **free** discovery call. **No pricing numbers on the site** — but
 the *pricing model* is stated (fixed price per project, or a flat monthly plan, quoted

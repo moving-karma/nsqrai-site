@@ -355,6 +355,37 @@ section.content::before{
 .step h3{margin-bottom:9px;font-size:1rem}
 .step p{color:var(--muted);font-size:.87rem;margin:0}
 
+/* GPU servers: a left-to-right pipeline, purchase to payout */
+.panel-link{display:inline-block;margin-top:18px;font-size:.88rem;color:var(--cyan);text-decoration:none;position:relative;z-index:1}
+.panel-link:hover{text-decoration:underline;text-underline-offset:4px}
+.pipe{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:28px;position:relative}
+.pipe::before{
+  content:"";position:absolute;top:5px;left:6px;right:6px;height:1px;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));opacity:.55;
+}
+.pipe li{position:relative;padding-top:30px}
+.pipe li::before{
+  content:"";position:absolute;top:0;left:0;width:11px;height:11px;border-radius:50%;
+  background:var(--bg);border:1.5px solid var(--cyan);box-shadow:0 0 0 4px var(--bg);
+}
+.pipe li:nth-child(n+3)::before{border-color:var(--violet)}
+.pipe-k{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
+.pipe li:nth-child(n+3) .pipe-k{color:#8a6dff}
+.pipe h3{font-size:1.02rem;margin-bottom:9px}
+.pipe p{color:var(--muted);font-size:.9rem;margin:0}
+@media(max-width:860px){
+  .pipe{grid-template-columns:1fr;gap:26px;padding-left:28px}
+  .pipe::before{top:6px;bottom:6px;left:5px;right:auto;width:1px;height:auto;background:linear-gradient(180deg,var(--cyan),var(--violet))}
+  .pipe li{padding-top:0}
+  .pipe li::before{left:-28px;top:4px}
+}
+.gpu-notes{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:52px;padding-top:30px;border-top:1px solid var(--line-2)}
+@media(max-width:860px){.gpu-notes{grid-template-columns:1fr;gap:22px}}
+.gpu-notes h3{font-size:.98rem;margin-bottom:7px}
+.gpu-notes p{color:var(--muted);font-size:.88rem;margin:0}
+.gpu-cta{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:40px}
+.gpu-cta span{color:var(--dim);font-size:.85rem}
+
 .about{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
 @media(max-width:860px){.about{grid-template-columns:1fr;gap:36px}}
 .about p{color:var(--muted);font-size:1.02rem}
@@ -439,6 +470,7 @@ html{scrollbar-color:#232c47 #04050c}
     <a class="logo" href="#top"><span class="logo-mark"></span> NSQR&nbsp;AI</a>
     <div class="nav-links">
       <a href="#services">Services</a>
+      <a href="#gpu">GPU servers</a>
       <a href="#process">How it works</a>
       <a href="#about">About</a>
       <a href="/pay.html">Payments</a>
@@ -752,7 +784,51 @@ html{scrollbar-color:#232c47 #04050c}
            power, thermal and airflow, InfiniBand/RoCE fabric and a priced bill of materials
            for teams deploying H200 / B200-class nodes at 10–14 kW apiece.</p>
         <ul><li>Capacity planning</li><li>Rack elevations</li><li>Power &amp; thermal</li><li>Network fabric</li><li>Bill of materials</li></ul>
+        <a class="panel-link" href="#gpu">Buying GPU servers as an investment? See how that works &rarr;</a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== GPU SERVERS ==================== -->
+<section class="content" id="gpu">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <p class="eyebrow">GPU servers</p>
+      <h2 class="grad">Own the hardware.<br>Let it earn.</h2>
+      <p>For businesses and individuals buying GPU servers as an investment. I handle
+         everything between the purchase and the payout, so the machine works instead
+         of sitting in a box.</p>
+    </div>
+    <ol class="pipe">
+      <li class="rv"><span class="pipe-k">Source</span><h3>The right server for the money</h3>
+        <p>8× RTX PRO 6000, H100 or H200 class. I compare vendors and configurations
+           against what they actually rent for, then handle the order.</p></li>
+      <li class="rv"><span class="pipe-k">Colocate</span><h3>Cheap power, proper home</h3>
+        <p>I find a data center with low power rates and the space and cooling the
+           server needs, then get it racked and networked.</p></li>
+      <li class="rv"><span class="pipe-k">List</span><h3>On the rental marketplaces</h3>
+        <p>Listed on GPU rental platforms, priced against the market and kept online,
+           so renters find it and keep coming back.</p></li>
+      <li class="rv"><span class="pipe-k">Earn</span><h3>Or other revenue</h3>
+        <p>When a marketplace isn't the best use, I look for other ways to put it to
+           work: direct rental to a team that needs compute, or other workloads.</p></li>
+    </ol>
+    <div class="gpu-notes">
+      <div class="rv"><h3>In your name</h3>
+        <p>The hardware, the colocation contract and every platform account are
+           registered to you. Nothing is held hostage.</p></div>
+      <div class="rv"><h3>Taxes</h3>
+        <p>Business equipment can come with depreciation benefits. Whether and how
+           that applies to you is your CPA's call. I give them the invoices and specs
+           they need.</p></div>
+      <div class="rv"><h3>No promised returns</h3>
+        <p>GPU rental income moves with demand. You get realistic numbers before you
+           buy, not a sales pitch.</p></div>
+    </div>
+    <div class="gpu-cta rv">
+      <a class="btn" href="#contact">Talk through a GPU build</a>
+      <span>Free call. No pressure to buy.</span>
     </div>
   </div>
 </section>
